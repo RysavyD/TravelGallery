@@ -1,0 +1,45 @@
+@model List<TravelGallery.Models.Trip>
+@{
+    ViewData["Title"] = "Správa výletů";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Výlety</h1>
+    <a asp-action="Create" class="btn btn-danger">+ Nový výlet</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Žádné výlety.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Název</th>
+                    <th>Datum</th>
+                    <th>Médií</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trip in Model)
+                {
+                    <tr>
+                        <td>@trip.Title</td>
+                        <td>@trip.Date.ToString("d. M. yyyy")</td>
+                        <td>@trip.Media.Count</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@trip.Id" class="btn btn-sm btn-outline-secondary">Upravit</a>
+                            <a asp-area="Admin" asp-controller="Media" asp-action="Upload" asp-route-tripId="@trip.Id"
+                               class="btn btn-sm btn-outline-primary">Média</a>
+                            <a asp-action="Delete" asp-route-id="@trip.Id" class="btn btn-sm btn-outline-danger">Smazat</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,40 @@
+@model TravelGallery.Areas.Admin.ViewModels.UserCreateViewModel
+@{
+    ViewData["Title"] = "Nový uživatel";
+}
+
+<h1 class="h3 mb-4">Nový uživatel</h1>
+
+<div class="row">
+    <div class="col-md-5">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">E-mail</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisplayName" class="form-label">Jméno</label>
+                <input asp-for="DisplayName" class="form-control" />
+                <span asp-validation-for="DisplayName" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Heslo</label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+            <div class="mb-3 form-check">
+                <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />
+                <label asp-for="IsAdmin" class="form-check-label">Administrátor</label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Vytvořit</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Zrušit</a>
+            </div>
+        </form>
+    </div>
+</div>

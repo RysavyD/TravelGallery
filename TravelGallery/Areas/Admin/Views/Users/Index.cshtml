@@ -1,0 +1,51 @@
+@model List<TravelGallery.Areas.Admin.ViewModels.UserListItemViewModel>
+@{
+    ViewData["Title"] = "Správa uživatelů";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Uživatelé</h1>
+    <a asp-action="Create" class="btn btn-danger">+ Nový uživatel</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Jméno</th>
+                <th>E-mail</th>
+                <th>Role</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.DisplayName</td>
+                    <td>@user.Email</td>
+                    <td>
+                        @foreach (var role in user.Roles)
+                        {
+                            <span class="badge @(role == "Admin" ? "bg-danger" : "bg-secondary")">@role</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <form asp-action="ToggleAdmin" asp-route-id="@user.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-warning"
+                                    title="@(user.Roles.Contains("Admin") ? "Odebrat admin práva" : "Přidat admin práva")">
+                                @Html.Raw(user.Roles.Contains("Admin") ? "&#8595; Admin" : "&#8593; Admin")
+                            </button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Smazat uživatele @user.Email?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Smazat</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

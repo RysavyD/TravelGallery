@@ -1,0 +1,62 @@
+@model TravelGallery.Areas.Admin.ViewModels.TripFormViewModel
+@{
+    ViewData["Title"] = "Upravit výlet";
+}
+
+<h1 class="h3 mb-4">Upravit výlet</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Název výletu</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Date" class="form-label">Datum</label>
+                <input asp-for="Date" type="date" class="form-control"
+                       value="@Model.Date.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="Date" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Popis výletu</label>
+                <div id="quill-editor" style="min-height:250px;"></div>
+                <input type="hidden" asp-for="Description" id="Description" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Uložit</button>
+                <a asp-area="Admin" asp-controller="Media" asp-action="Upload" asp-route-tripId="@Model.Id"
+                   class="btn btn-outline-primary">Spravovat média</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Zpět</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+    <script>
+        const quill = new Quill('#quill-editor', { theme: 'snow' });
+        const hiddenInput = document.getElementById('Description');
+
+        if (hiddenInput.value) {
+            quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
+        }
+
+        document.querySelector('form').addEventListener('submit', () => {
+            hiddenInput.value = quill.root.innerHTML;
+        });
+    </script>
+}

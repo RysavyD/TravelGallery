@@ -1,0 +1,110 @@
+@model TravelGallery.Models.Trip
+@{
+    ViewData["Title"] = $"Média – {Model.Title}";
+}
+
+@section Styles {
+    <style>
+        .media-thumb { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; }
+        .media-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; background: #fff; }
+        .drop-zone { border: 2px dashed #adb5bd; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: background .2s; }
+        .drop-zone.dragover { background: #f8f9fa; border-color: #6c757d; }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Média</h1>
+        <small class="text-muted">@Model.Title &bull; @Model.Date.ToString("d. M. yyyy")</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-controller="Trips" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">Upravit výlet</a>
+        <a asp-action="Index" asp-controller="Trips" class="btn btn-outline-secondary btn-sm">Zpět na výlety</a>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-lg-6">
+        <form asp-action="Upload" asp-route-tripId="@Model.Id" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="drop-zone" id="dropZone">
+                <p class="mb-2">&#128444; Přetáhněte soubory sem nebo klikněte pro výběr</p>
+                <input type="file" name="files" id="fileInput" multiple accept="image/*,video/*"
+                       class="d-none" />
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        onclick="document.getElementById('fileInput').click()">Vybrat soubory</button>
+                <div id="fileList" class="mt-2 small text-muted"></div>
+            </div>
+            <button type="submit" class="btn btn-danger mt-3 w-100" id="uploadBtn" disabled>
+                Nahrát vybrané soubory
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (Model.Media.Any())
+{
+    <h2 class="h5 mb-3">Nahraná média (@Model.Media.Count)</h2>
+    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3" id="mediaList">
+        @foreach (var m in Model.Media.OrderBy(x => x.SortOrder))
+        {
+            <div class="col" data-id="@m.Id">
+                <div class="media-card text-center">
+                    @if (m.MediaType == TravelGallery.Models.MediaType.Image)
+                    {
+                        <img src="/uploads/@Model.Id/thumbs/@m.FileName" class="media-thumb mb-2" alt="@m.Caption" />
+                    }
+                    else
+                    {
+                        <div class="media-thumb mb-2 d-flex align-items-center justify-content-center bg-dark text-white mx-auto">
+                            &#9654; Video
+                        </div>
+                    }
+
+                    <form asp-action="UpdateCaption" method="post" class="d-flex gap-1 mb-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@m.Id" />
+                        <input type="text" name="caption" value="@m.Caption" class="form-control form-control-sm" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">&#10003;</button>
+                    </form>
+
+                    <form asp-action="Delete" method="post"
+                          onsubmit="return confirm('Smazat toto médium?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@m.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Smazat</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileList = document.getElementById('fileList');
+        const dropZone = document.getElementById('dropZone');
+
+        input.addEventListener('change', () => {
+            updateFileList(input.files);
+        });
+
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            input.files = e.dataTransfer.files;
+            updateFileList(e.dataTransfer.files);
+        });
+
+        function updateFileList(files) {
+            uploadBtn.disabled = files.length === 0;
+            fileList.textContent = files.length > 0
+                ? `Vybráno: ${Array.from(files).map(f => f.name).join(', ')}`
+                : '';
+        }
+    </script>
+}

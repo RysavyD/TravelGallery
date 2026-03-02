@@ -1,0 +1,163 @@
+@model TravelGallery.Models.Trip
+@{
+    ViewData["Title"] = Model.Title;
+    var images = Model.Media.Where(m => m.MediaType == TravelGallery.Models.MediaType.Image).ToList();
+    var allMedia = Model.Media.OrderBy(m => m.SortOrder).ToList();
+}
+
+@section Styles {
+    <style>
+        .pswp { --pswp-bg: #000; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .gallery-item { position: relative; aspect-ratio: 4/3; overflow: hidden; cursor: pointer; border-radius: 4px; }
+        .gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; transition: transform .2s; }
+        .gallery-item:hover img, .gallery-item:hover video { transform: scale(1.04); }
+        .gallery-item .play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: rgba(255,255,255,.85); pointer-events: none; }
+        .comment-form { margin-top: .5rem; }
+    </style>
+}
+
+<div class="row">
+    <div class="col-lg-9 mx-auto">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Trips" asp-action="Index">Výlety</a></li>
+                <li class="breadcrumb-item active">@Model.Title</li>
+            </ol>
+        </nav>
+
+        <h1 class="mb-1">@Model.Title</h1>
+        <p class="text-muted mb-4">@Model.Date.ToString("d. MMMM yyyy", new System.Globalization.CultureInfo("cs-CZ"))</p>
+
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="trip-description mb-5 lh-lg">
+                @Html.Raw(Model.Description)
+            </div>
+        }
+
+        @if (allMedia.Any())
+        {
+            <h2 class="h5 mb-3">Fotografie (@allMedia.Count)</h2>
+
+            <div class="gallery-grid" id="gallery">
+                @for (int i = 0; i < allMedia.Count; i++)
+                {
+                    var m = allMedia[i];
+                    <div class="gallery-item" id="media-@m.Id"
+                         data-index="@i"
+                         data-type="@(m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image")"
+                         data-src="/uploads/@Model.Id/@m.FileName"
+                         @if (m.MediaType == TravelGallery.Models.MediaType.Image)
+                         {
+                             <text>data-thumb="/uploads/@Model.Id/thumbs/@m.FileName"</text>
+                         }>
+
+                        @if (m.MediaType == TravelGallery.Models.MediaType.Image)
+                        {
+                            <img src="/uploads/@Model.Id/thumbs/@m.FileName" alt="@m.Caption" loading="lazy" />
+                        }
+                        else
+                        {
+                            <video src="/uploads/@Model.Id/@m.FileName" muted preload="none"
+                                   poster="" style="background:#111"></video>
+                            <div class="play-icon">&#9654;</div>
+                        }
+                    </div>
+
+                    <div class="px-1 mb-3">
+                        @if (!string.IsNullOrEmpty(m.Caption))
+                        {
+                            <small class="text-muted d-block">@m.Caption</small>
+                        }
+
+                        @if (m.Comments.Any())
+                        {
+                            <ul class="list-unstyled mt-2 mb-1">
+                                @foreach (var c in m.Comments)
+                                {
+                                    <li class="small">
+                                        <strong>@c.User.DisplayName</strong>
+                                        <span class="text-muted">@c.CreatedAt.ToString("d.M.yyyy HH:mm")</span><br />
+                                        @c.Text
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        <form asp-controller="Trips" asp-action="AddComment" method="post" class="comment-form d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="mediaId" value="@m.Id" />
+                            <input type="text" name="text" class="form-control form-control-sm" placeholder="Komentář…" maxlength="500" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">Přidat</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Tento výlet nemá žádná média.</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe-lightbox.esm.js';
+        import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe.esm.js';
+
+        const items = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(allMedia.Select(m => new {
+            src = $"/uploads/{Model.Id}/{m.FileName}",
+            thumb = m.MediaType == TravelGallery.Models.MediaType.Image ? $"/uploads/{Model.Id}/thumbs/{m.FileName}" : null,
+            type = m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image",
+            caption = m.Caption,
+            w = 1920,
+            h = 1080
+        })));
+
+        const gallery = document.getElementById('gallery');
+        const galleryItems = gallery.querySelectorAll('.gallery-item');
+
+        galleryItems.forEach((el) => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.dataset.index);
+                const item = items[idx];
+
+                if (item.type === 'video') {
+                    const pswp = new PhotoSwipe({
+                        dataSource: [{
+                            html: `<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+                                     <video controls autoplay style="max-width:95vw;max-height:90vh;"
+                                            src="${item.src}"></video>
+                                   </div>`
+                        }],
+                        index: 0
+                    });
+                    pswp.init();
+                } else {
+                    const lightbox = new PhotoSwipeLightbox({
+                        dataSource: items.filter(i => i.type === 'image').map(i => ({
+                            src: i.src,
+                            width: i.w,
+                            height: i.h,
+                            alt: i.caption
+                        })),
+                        pswpModule: PhotoSwipe
+                    });
+                    const imageItems = allItems => allItems.filter(i => i.type === 'image');
+                    const imageIdx = items.slice(0, idx + 1).filter(i => i.type === 'image').length - 1;
+
+                    const lightbox2 = new PhotoSwipeLightbox({
+                        dataSource: items
+                            .filter(i => i.type === 'image')
+                            .map(i => ({ src: i.src, width: 1920, height: 1080, alt: i.caption })),
+                        pswpModule: PhotoSwipe
+                    });
+                    lightbox2.init();
+                    lightbox2.loadAndOpen(Math.max(0, imageIdx));
+                }
+            });
+        });
+    </script>
+}

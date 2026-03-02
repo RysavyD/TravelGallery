@@ -1,0 +1,24 @@
+@model TravelGallery.Models.Trip
+@{
+    ViewData["Title"] = "Smazat výlet";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">Smazat výlet</div>
+            <div class="card-body">
+                <p>Opravdu chcete smazat výlet <strong>@Model.Title</strong>?</p>
+                <p class="text-muted small">Budou smazána i všechna média (@Model.Media.Count souborů) a komentáře.</p>
+
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Smazat</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Zrušit</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

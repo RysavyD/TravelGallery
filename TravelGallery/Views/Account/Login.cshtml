@@ -1,0 +1,51 @@
+@model TravelGallery.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Přihlášení";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Přihlášení – Výlety</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h4 mb-4 text-center">&#9968; Výlety &ndash; přihlášení</h1>
+                        <form asp-action="Login" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label">E-mail</label>
+                                <input asp-for="Email" class="form-control" autocomplete="email" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label">Heslo</label>
+                                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                                <label asp-for="RememberMe" class="form-check-label">Zapamatovat přihlášení</label>
+                            </div>
+                            <button type="submit" class="btn btn-dark w-100">Přihlásit se</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

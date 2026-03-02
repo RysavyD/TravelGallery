@@ -1,0 +1,61 @@
+@model List<TravelGallery.ViewModels.TripTimelineItemViewModel>
+@{
+    ViewData["Title"] = "Výlety";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">Výlety</h1>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <p class="fs-5">Zatím žádné výlety.</p>
+            </div>
+        }
+
+        <div class="timeline">
+            @foreach (var trip in Model)
+            {
+                <div class="card mb-4 shadow-sm trip-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h2 class="h5 mb-0">
+                                <a asp-controller="Trips" asp-action="Detail" asp-route-id="@trip.Id"
+                                   class="text-decoration-none text-dark stretched-link">
+                                    @trip.Title
+                                </a>
+                            </h2>
+                            <span class="badge bg-secondary ms-2 text-nowrap">
+                                @trip.Date.ToString("d. M. yyyy")
+                            </span>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(trip.ShortDescription))
+                        {
+                            <p class="text-muted small mb-3">@trip.ShortDescription</p>
+                        }
+
+                        @if (trip.ThumbnailUrls.Any())
+                        {
+                            <div class="d-flex gap-2 flex-wrap">
+                                @foreach (var thumb in trip.ThumbnailUrls)
+                                {
+                                    <img src="@thumb" alt="náhled" class="trip-thumb rounded"
+                                         style="width:100px;height:75px;object-fit:cover;" />
+                                }
+                                @if (trip.HasMoreMedia)
+                                {
+                                    <div class="trip-thumb-more rounded d-flex align-items-center justify-content-center bg-secondary text-white"
+                                         style="width:100px;height:75px;font-size:0.85rem;">
+                                        +@(trip.MediaCount - trip.ThumbnailUrls.Count) dalších
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
