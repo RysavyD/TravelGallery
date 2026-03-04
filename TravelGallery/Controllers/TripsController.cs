@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,37 +53,11 @@ public class TripsController : Controller
     {
         var trip = await _db.Trips
             .Include(t => t.Media.OrderBy(m => m.SortOrder))
-                .ThenInclude(m => m.Comments.OrderBy(c => c.CreatedAt))
-                    .ThenInclude(c => c.User)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (trip == null) return NotFound();
 
         return View(trip);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddComment(int mediaId, string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return BadRequest();
-
-        var media = await _db.Media.FindAsync(mediaId);
-        if (media == null) return NotFound();
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
-
-        _db.Comments.Add(new Comment
-        {
-            MediaId = mediaId,
-            UserId = userId,
-            Text = text.Trim()
-        });
-        await _db.SaveChangesAsync();
-
-        return RedirectToAction("Detail", "Trips", new { id = media.TripId }, $"media-{mediaId}");
     }
 
     private static string StripHtml(string html)

@@ -53,6 +53,12 @@
             quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
         }
 
+        // Sync on every change so the value is always ready before submit
+        quill.on('text-change', () => {
+            hiddenInput.value = quill.root.innerHTML;
+        });
+
+        // Fallback: also sync on submit
         document.querySelector('form').addEventListener('submit', () => {
             hiddenInput.value = quill.root.innerHTML;
         });
