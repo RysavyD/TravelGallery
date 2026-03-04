@@ -16,6 +16,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        builder.HasDefaultSchema("travel");
+
         builder.Entity<Media>()
             .HasOne(m => m.Trip)
             .WithMany(t => t.Media)
