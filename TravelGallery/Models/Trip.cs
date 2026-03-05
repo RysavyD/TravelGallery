@@ -9,4 +9,5 @@ public class Trip
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Media> Media { get; set; } = new List<Media>();
+    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }

@@ -31,6 +31,18 @@
                 <input type="hidden" asp-for="Description" id="Description" />
             </div>
 
+            <div class="mb-4">
+                <label asp-for="TagNames" class="form-label">Tagy</label>
+                <div id="tag-chips" class="d-flex flex-wrap gap-1 mb-1"></div>
+                <div class="input-group">
+                    <input type="text" id="tag-input" class="form-control"
+                           placeholder="Zadej tag a stiskni Enter nebo čárku…" autocomplete="off" />
+                    <button type="button" class="btn btn-outline-secondary" id="tag-add-btn">Přidat</button>
+                </div>
+                <input type="hidden" asp-for="TagNames" id="TagNames" />
+                <div class="form-text">Tagy slouží k filtrování výletů. Příklad: Hory, Zima, Slovensko</div>
+            </div>
+
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-danger">Uložit</button>
                 <a asp-area="Admin" asp-controller="Media" asp-action="Upload" asp-route-tripId="@Model.Id"
@@ -64,5 +76,43 @@
         document.querySelector('form').addEventListener('submit', () => {
             hiddenInput.value = quill.root.innerHTML;
         });
+    </script>
+    <script>
+        // ── Tag chip input ────────────────────────────────────────────────
+        const tagInput   = document.getElementById('tag-input');
+        const tagHidden  = document.getElementById('TagNames');
+        const tagChips   = document.getElementById('tag-chips');
+        let tags = tagHidden.value ? tagHidden.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+        function renderChips() {
+            tagChips.innerHTML = '';
+            tags.forEach((t, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'badge bg-secondary d-flex align-items-center gap-1';
+                chip.style.fontSize = '.85rem';
+                chip.innerHTML = `${t} <button type="button" class="btn-close btn-close-white" style="font-size:.6rem;" aria-label="Odebrat"></button>`;
+                chip.querySelector('button').addEventListener('click', () => { tags.splice(i, 1); renderChips(); });
+                tagChips.appendChild(chip);
+            });
+            tagHidden.value = tags.join(', ');
+        }
+
+        function addTag(val) {
+            const name = val.trim().replace(/,$/, '').trim();
+            if (name && !tags.some(t => t.toLowerCase() === name.toLowerCase())) {
+                tags.push(name);
+                renderChips();
+            }
+            tagInput.value = '';
+        }
+
+        tagInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput.value); }
+        });
+        tagInput.addEventListener('input', e => {
+            if (tagInput.value.endsWith(',')) addTag(tagInput.value);
+        });
+        document.getElementById('tag-add-btn').addEventListener('click', () => addTag(tagInput.value));
+        renderChips();
     </script>
 }

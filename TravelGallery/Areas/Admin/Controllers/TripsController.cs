@@ -25,6 +25,7 @@ public class TripsController : Controller
     {
         var trips = await _db.Trips
             .Include(t => t.Media)
+            .Include(t => t.Tags)
             .OrderByDescending(t => t.Date)
             .ToListAsync();
         return View(trips);
@@ -51,13 +52,15 @@ public class TripsController : Controller
         _db.Trips.Add(trip);
         await _db.SaveChangesAsync();
 
+        await SaveTagsAsync(trip, model.TagNames);
+
         return RedirectToAction("Upload", "Media", new { tripId = trip.Id });
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var trip = await _db.Trips.FindAsync(id);
+        var trip = await _db.Trips.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == id);
         if (trip == null) return NotFound();
 
         return View(new TripFormViewModel
@@ -65,7 +68,8 @@ public class TripsController : Controller
             Id = trip.Id,
             Title = trip.Title,
             Date = trip.Date,
-            Description = trip.Description
+            Description = trip.Description,
+            TagNames = string.Join(", ", trip.Tags.Select(t => t.Name))
         });
     }
 
@@ -75,13 +79,14 @@ public class TripsController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var trip = await _db.Trips.FindAsync(model.Id);
+        var trip = await _db.Trips.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == model.Id);
         if (trip == null) return NotFound();
 
         trip.Title = model.Title;
         trip.Date = model.Date;
         trip.Description = model.Description;
-        await _db.SaveChangesAsync();
+
+        await SaveTagsAsync(trip, model.TagNames);
 
         TempData["Success"] = "Výlet byl uložen.";
         return RedirectToAction("Index");
@@ -108,5 +113,32 @@ public class TripsController : Controller
 
         TempData["Success"] = "Výlet byl smazán.";
         return RedirectToAction("Index");
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private async Task SaveTagsAsync(Trip trip, string tagNames)
+    {
+        // Parse comma-separated tag names
+        var names = (tagNames ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(n => n.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        // Clear existing tags on trip
+        trip.Tags.Clear();
+
+        foreach (var name in names)
+        {
+            var slug = Tag.ToSlug(name);
+            var tag = await _db.Tags.FirstOrDefaultAsync(t => t.Slug == slug)
+                      ?? new Tag { Name = name, Slug = slug };
+
+            if (tag.Id == 0) _db.Tags.Add(tag);
+            trip.Tags.Add(tag);
+        }
+
+        await _db.SaveChangesAsync();
     }
 }

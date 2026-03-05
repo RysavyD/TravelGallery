@@ -18,12 +18,18 @@ public class TripsController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? tag)
     {
-        var trips = await _db.Trips
+        var query = _db.Trips
             .Include(t => t.Media)
+            .Include(t => t.Tags)
             .OrderByDescending(t => t.Date)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(tag))
+            query = query.Where(t => t.Tags.Any(tg => tg.Slug == tag));
+
+        var trips = await query.ToListAsync();
 
         var viewModels = trips.Select(t =>
         {
@@ -42,10 +48,14 @@ public class TripsController : Controller
                     .Take(4)
                     .Select(m => $"/uploads/{t.Id}/thumbs/{m.FileName}")
                     .ToList(),
-                MediaCount = t.Media.Count
+                MediaCount = t.Media.Count,
+                Tags = t.Tags.OrderBy(tg => tg.Name)
+                    .Select(tg => (tg.Name, tg.Slug))
+                    .ToList()
             };
         }).ToList();
 
+        ViewBag.ActiveTag = tag;
         return View(viewModels);
     }
 
@@ -53,6 +63,7 @@ public class TripsController : Controller
     {
         var trip = await _db.Trips
             .Include(t => t.Media.OrderBy(m => m.SortOrder))
+            .Include(t => t.Tags)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (trip == null) return NotFound();

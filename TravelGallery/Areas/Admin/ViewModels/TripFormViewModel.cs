@@ -14,4 +14,7 @@ public class TripFormViewModel
     public DateTime Date { get; set; } = DateTime.Today;
 
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>Čárkou oddělené názvy tagů, např. "Hory, Zima, Slovensko"</summary>
+    public string TagNames { get; set; } = string.Empty;
 }

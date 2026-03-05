@@ -9,4 +9,5 @@ public class TripTimelineItemViewModel
     public List<string> ThumbnailUrls { get; set; } = new();
     public int MediaCount { get; set; }
     public bool HasMoreMedia => MediaCount > ThumbnailUrls.Count;
+    public List<(string Name, string Slug)> Tags { get; set; } = new();
 }
