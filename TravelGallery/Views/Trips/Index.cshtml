@@ -2,19 +2,28 @@
 @{
     ViewData["Title"] = "Výlety";
     var activeTag = ViewBag.ActiveTag as string;
-    var emptyMessage = string.IsNullOrEmpty(activeTag)
-        ? "Zatím žádné výlety."
-        : "Žádné výlety s tagem " + activeTag + ".";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var hasFilter = !string.IsNullOrEmpty(activeTag) || !string.IsNullOrEmpty(searchQuery);
+    var emptyMessage = hasFilter
+        ? "Žádné výlety odpovídající vašemu hledání."
+        : "Zatím žádné výlety.";
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
             <h1 class="mb-0">Výlety</h1>
-            @if (!string.IsNullOrEmpty(activeTag))
+            @if (hasFilter)
             {
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary fs-6">@activeTag</span>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    @if (!string.IsNullOrEmpty(searchQuery))
+                    {
+                        <span class="badge bg-info fs-6">🔍 @searchQuery</span>
+                    }
+                    @if (!string.IsNullOrEmpty(activeTag))
+                    {
+                        <span class="badge bg-primary fs-6">@activeTag</span>
+                    }
                     <a asp-action="Index" class="btn btn-sm btn-outline-secondary">× Zrušit filtr</a>
                 </div>
             }
@@ -55,7 +64,7 @@
                                 @foreach (var t in trip.Tags)
                                 {
                                     var tagCss = t.Slug == activeTag ? "bg-primary" : "bg-light text-dark border";
-                                    <a asp-action="Index" asp-route-tag="@t.Slug"
+                                    <a asp-action="Index" asp-route-tag="@t.Slug" asp-route-q="@searchQuery"
                                        class="badge text-decoration-none @tagCss">
                                         @t.Name
                                     </a>

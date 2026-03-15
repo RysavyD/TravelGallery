@@ -18,7 +18,7 @@ public class TripsController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? tag)
+    public async Task<IActionResult> Index(string? tag, string? q)
     {
         var query = _db.Trips
             .Include(t => t.Media)
@@ -28,6 +28,15 @@ public class TripsController : Controller
 
         if (!string.IsNullOrEmpty(tag))
             query = query.Where(t => t.Tags.Any(tg => tg.Slug == tag));
+
+        if (!string.IsNullOrEmpty(q))
+        {
+            var search = q.Trim();
+            query = query.Where(t =>
+                t.Title.Contains(search) ||
+                t.Description.Contains(search) ||
+                t.Tags.Any(tg => tg.Name.Contains(search)));
+        }
 
         var trips = await query.ToListAsync();
 
@@ -56,6 +65,7 @@ public class TripsController : Controller
         }).ToList();
 
         ViewBag.ActiveTag = tag;
+        ViewBag.SearchQuery = q;
         return View(viewModels);
     }
 
