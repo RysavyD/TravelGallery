@@ -1,3 +1,4 @@
+using Ganss.Xss;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TravelGallery.Data;
@@ -27,6 +28,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddScoped<FileStorageService>();
+builder.Services.AddScoped<HtmlSanitizer>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

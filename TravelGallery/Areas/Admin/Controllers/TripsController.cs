@@ -1,3 +1,4 @@
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,13 @@ public class TripsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly FileStorageService _storage;
+    private readonly HtmlSanitizer _sanitizer;
 
-    public TripsController(ApplicationDbContext db, FileStorageService storage)
+    public TripsController(ApplicationDbContext db, FileStorageService storage, HtmlSanitizer sanitizer)
     {
         _db = db;
         _storage = storage;
+        _sanitizer = sanitizer;
     }
 
     public async Task<IActionResult> Index()
@@ -47,7 +50,7 @@ public class TripsController : Controller
         {
             Title = model.Title,
             Date = model.Date,
-            Description = model.Description
+            Description = _sanitizer.Sanitize(model.Description ?? string.Empty)
         };
         _db.Trips.Add(trip);
         await _db.SaveChangesAsync();
@@ -84,7 +87,7 @@ public class TripsController : Controller
 
         trip.Title = model.Title;
         trip.Date = model.Date;
-        trip.Description = model.Description;
+        trip.Description = _sanitizer.Sanitize(model.Description ?? string.Empty);
 
         await SaveTagsAsync(trip, model.TagNames);
 

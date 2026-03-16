@@ -103,14 +103,21 @@
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe-lightbox.esm.js';
         import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe.esm.js';
 
-        const items = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(allMedia.Select(m => new {
-            src = $"/uploads/{Model.Id}/{m.FileName}",
-            thumb = m.MediaType == TravelGallery.Models.MediaType.Image ? $"/uploads/{Model.Id}/thumbs/{m.FileName}" : null,
-            type = m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image",
-            caption = m.Caption,
-            w = 1920,
-            h = 1080
-        })));
+        const items = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            allMedia.Select(m => new {
+                src = $"/uploads/{Model.Id}/{m.FileName}",
+                thumb = m.MediaType == TravelGallery.Models.MediaType.Image ? $"/uploads/{Model.Id}/thumbs/{m.FileName}" : null,
+                type = m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image",
+                caption = m.Caption,
+                w = 1920,
+                h = 1080
+            }),
+            new System.Text.Json.JsonSerializerOptions
+            {
+                // JavaScriptEncoder.Default encodes HTML-sensitive characters (<, >, &, ', ")
+                // as unicode escape sequences, preventing XSS injection via caption or filenames.
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Default
+            }));
 
         const gallery = document.getElementById('gallery');
         const galleryItems = gallery.querySelectorAll('.gallery-item');
