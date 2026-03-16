@@ -120,7 +120,7 @@ public class TripsController : Controller
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private async Task SaveTagsAsync(Trip trip, string tagNames)
+    private async Task SaveTagsAsync(Trip trip, string? tagNames)
     {
         // Parse comma-separated tag names
         var names = (tagNames ?? "")

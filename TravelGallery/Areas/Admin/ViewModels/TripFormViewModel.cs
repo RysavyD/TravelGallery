@@ -13,8 +13,8 @@ public class TripFormViewModel
     [Required(ErrorMessage = "Zadejte datum výletu")]
     public DateTime Date { get; set; } = DateTime.Today;
 
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
     /// <summary>Čárkou oddělené názvy tagů, např. "Hory, Zima, Slovensko"</summary>
-    public string TagNames { get; set; } = string.Empty;
+    public string? TagNames { get; set; }
 }
