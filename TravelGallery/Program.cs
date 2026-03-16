@@ -58,3 +58,6 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+
+// Zpřístupní interní třídu Program pro WebApplicationFactory<Program> v testovacím projektu
+public partial class Program { }
