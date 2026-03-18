@@ -60,7 +60,9 @@ public class TripsController : Controller
                 MediaCount = t.Media.Count,
                 Tags = t.Tags.OrderBy(tg => tg.Name)
                     .Select(tg => (tg.Name, tg.Slug))
-                    .ToList()
+                    .ToList(),
+                Latitude = t.Latitude,
+                Longitude = t.Longitude
             };
         }).ToList();
 

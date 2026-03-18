@@ -6,6 +6,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .pswp { --pswp-bg: #000; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -16,7 +17,7 @@
         .gallery-item:hover img, .gallery-item:hover video { transform: scale(1.04); }
         .gallery-item .play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: rgba(255,255,255,.85); pointer-events: none; }
         .pswp__custom-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 20px 16px; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: .9rem; text-align: center; pointer-events: none; }
-
+        #trip-map { height: 350px; border-radius: 8px; }
     </style>
 }
 
@@ -51,6 +52,14 @@
         {
             <div class="trip-description mb-5 lh-lg">
                 @Html.Raw(Model.Description)
+            </div>
+        }
+
+        @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+        {
+            <div class="mb-5">
+                <h2 class="h5 mb-2">Poloha</h2>
+                <div id="trip-map"></div>
             </div>
         }
 
@@ -99,6 +108,20 @@
 </div>
 
 @section Scripts {
+    @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+    {
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            const map = L.map('trip-map').setView([@Model.Latitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture), @Model.Longitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture)], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+            L.marker([@Model.Latitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture), @Model.Longitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture)])
+                .addTo(map)
+                .bindPopup('@Html.Raw(Html.Encode(Model.Title))')
+                .openPopup();
+        </script>
+    }
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe-lightbox.esm.js';
         import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe.esm.js';

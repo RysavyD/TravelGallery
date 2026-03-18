@@ -10,4 +10,6 @@ public class TripTimelineItemViewModel
     public int MediaCount { get; set; }
     public bool HasMoreMedia => MediaCount > ThumbnailUrls.Count;
     public List<(string Name, string Slug)> Tags { get; set; } = new();
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

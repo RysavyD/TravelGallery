@@ -50,7 +50,9 @@ public class TripsController : Controller
         {
             Title = model.Title,
             Date = model.Date,
-            Description = _sanitizer.Sanitize(model.Description ?? string.Empty)
+            Description = _sanitizer.Sanitize(model.Description ?? string.Empty),
+            Latitude = model.Latitude,
+            Longitude = model.Longitude
         };
         _db.Trips.Add(trip);
         await _db.SaveChangesAsync();
@@ -72,7 +74,9 @@ public class TripsController : Controller
             Title = trip.Title,
             Date = trip.Date,
             Description = trip.Description,
-            TagNames = string.Join(", ", trip.Tags.Select(t => t.Name))
+            TagNames = string.Join(", ", trip.Tags.Select(t => t.Name)),
+            Latitude = trip.Latitude,
+            Longitude = trip.Longitude
         });
     }
 
@@ -88,6 +92,8 @@ public class TripsController : Controller
         trip.Title = model.Title;
         trip.Date = model.Date;
         trip.Description = _sanitizer.Sanitize(model.Description ?? string.Empty);
+        trip.Latitude = model.Latitude;
+        trip.Longitude = model.Longitude;
 
         await SaveTagsAsync(trip, model.TagNames);
 

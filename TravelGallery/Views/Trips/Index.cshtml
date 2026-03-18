@@ -7,6 +7,24 @@
     var emptyMessage = hasFilter
         ? "Žádné výlety odpovídající vašemu hledání."
         : "Zatím žádné výlety.";
+    var tripsWithCoords = Model.Where(t => t.Latitude.HasValue && t.Longitude.HasValue).ToList();
+}
+
+@if (tripsWithCoords.Any())
+{
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-10">
+            <button class="btn btn-sm btn-outline-secondary mb-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#trips-map-collapse"
+                    aria-expanded="false" aria-controls="trips-map-collapse"
+                    id="map-toggle-btn">
+                🗺 Zobrazit mapu výletů
+            </button>
+            <div class="collapse" id="trips-map-collapse">
+                <div id="trips-map" style="height:380px;border-radius:10px;" class="mb-2"></div>
+            </div>
+        </div>
+    </div>
 }
 
 <div class="row justify-content-center">
@@ -95,3 +113,54 @@
         </div>
     </div>
 </div>
+
+@if (tripsWithCoords.Any())
+{
+    @section Styles {
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    }
+
+    @section Scripts {
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            const trips = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                tripsWithCoords.Select(t => new {
+                    id = t.Id,
+                    title = t.Title,
+                    lat = t.Latitude!.Value,
+                    lng = t.Longitude!.Value,
+                    url = Url.Action("Detail", "Trips", new { id = t.Id })
+                }),
+                new System.Text.Json.JsonSerializerOptions {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Default
+                }
+            ));
+
+            let map = null;
+            const collapseEl = document.getElementById('trips-map-collapse');
+            const toggleBtn = document.getElementById('map-toggle-btn');
+
+            collapseEl.addEventListener('show.bs.collapse', () => {
+                toggleBtn.textContent = '🗺 Skrýt mapu výletů';
+            });
+            collapseEl.addEventListener('hide.bs.collapse', () => {
+                toggleBtn.textContent = '🗺 Zobrazit mapu výletů';
+            });
+
+            collapseEl.addEventListener('shown.bs.collapse', () => {
+                if (map) { map.invalidateSize(); return; }
+                map = L.map('trips-map');
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+                const bounds = [];
+                trips.forEach(t => {
+                    L.marker([t.lat, t.lng]).addTo(map)
+                        .bindPopup(`<strong><a href="${t.url}">${t.title}</a></strong>`);
+                    bounds.push([t.lat, t.lng]);
+                });
+                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+            });
+        </script>
+    }
+}

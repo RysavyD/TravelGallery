@@ -43,6 +43,22 @@
                 <div class="form-text">Tagy slouží k filtrování výletů. Příklad: Hory, Zima, Slovensko</div>
             </div>
 
+            <div class="mb-4">
+                <label class="form-label">Poloha na mapě</label>
+                <div class="row g-2 mb-2">
+                    <div class="col-sm-6">
+                        <input asp-for="Latitude" class="form-control" placeholder="Zeměpisná šířka (např. 50.0755)" id="Latitude" />
+                        <span asp-validation-for="Latitude" class="text-danger small"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <input asp-for="Longitude" class="form-control" placeholder="Zeměpisná délka (např. 14.4378)" id="Longitude" />
+                        <span asp-validation-for="Longitude" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div id="map-picker" style="height:300px;border-radius:6px;border:1px solid #dee2e6;"></div>
+                <div class="form-text">Klikni na mapu pro nastavení polohy, nebo zadej souřadnice ručně.</div>
+            </div>
+
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-danger">Uložit</button>
                 <a asp-area="Admin" asp-controller="Media" asp-action="Upload" asp-route-tripId="@Model.Id"
@@ -55,6 +71,7 @@
 
 @section Styles {
     <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 }
 
 @section Scripts {
@@ -114,5 +131,54 @@
         });
         document.getElementById('tag-add-btn').addEventListener('click', () => addTag(tagInput.value));
         renderChips();
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ── Map picker ────────────────────────────────────────────────────────
+        const latInput = document.getElementById('Latitude');
+        const lngInput = document.getElementById('Longitude');
+
+        const initLat = parseFloat(latInput.value) || 50.0;
+        const initLng = parseFloat(lngInput.value) || 15.0;
+        const initZoom = (latInput.value && lngInput.value) ? 10 : 7;
+
+        const map = L.map('map-picker').setView([initLat, initLng], initZoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        let marker = null;
+
+        function setMarker(lat, lng) {
+            if (marker) marker.setLatLng([lat, lng]);
+            else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            marker.on('dragend', () => {
+                const pos = marker.getLatLng();
+                latInput.value = pos.lat.toFixed(6);
+                lngInput.value = pos.lng.toFixed(6);
+            });
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+        }
+
+        if (latInput.value && lngInput.value) {
+            setMarker(initLat, initLng);
+        }
+
+        map.on('click', e => {
+            setMarker(e.latlng.lat, e.latlng.lng);
+        });
+
+        function syncMapFromInputs() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                setMarker(lat, lng);
+                map.setView([lat, lng], map.getZoom());
+            }
+        }
+
+        latInput.addEventListener('change', syncMapFromInputs);
+        lngInput.addEventListener('change', syncMapFromInputs);
     </script>
 }
