@@ -6,9 +6,13 @@
 @section Styles {
     <style>
         .media-thumb { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; }
-        .media-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; background: #fff; }
+        .media-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; background: #fff; position: relative; }
         .drop-zone { border: 2px dashed #adb5bd; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: background .2s; }
         .drop-zone.dragover { background: #f8f9fa; border-color: #6c757d; }
+        .drag-handle { position: absolute; top: 6px; left: 8px; cursor: grab; color: #adb5bd; font-size: 1rem; line-height: 1; user-select: none; }
+        .drag-handle:hover { color: #6c757d; }
+        .sortable-ghost { opacity: 0.4; }
+        .sortable-chosen { box-shadow: 0 0 0 2px #0d6efd44; }
     </style>
 }
 
@@ -44,12 +48,16 @@
 
 @if (Model.Media.Any())
 {
-    <h2 class="h5 mb-3">Nahraná média (@Model.Media.Count)</h2>
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <h2 class="h5 mb-0">Nahraná média (@Model.Media.Count)</h2>
+        <span id="reorderToast" class="text-success small" style="display:none;">✓ Pořadí uloženo</span>
+    </div>
     <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3" id="mediaList">
         @foreach (var m in Model.Media.OrderBy(x => x.SortOrder))
         {
             <div class="col" data-id="@m.Id">
                 <div class="media-card text-center">
+                    <span class="drag-handle" title="Přetáhnout pro změnu pořadí">&#9776;</span>
                     @if (m.MediaType == TravelGallery.Models.MediaType.Image)
                     {
                         <img src="/uploads/@Model.Id/thumbs/@m.FileName" class="media-thumb mb-2" alt="@m.Caption" />
@@ -81,7 +89,9 @@
 }
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <script>
+        // --- Upload drag & drop ---
         const input = document.getElementById('fileInput');
         const uploadBtn = document.getElementById('uploadBtn');
         const fileList = document.getElementById('fileList');
@@ -105,6 +115,43 @@
             fileList.textContent = files.length > 0
                 ? `Vybráno: ${Array.from(files).map(f => f.name).join(', ')}`
                 : '';
+        }
+
+        // --- Sortable reorder ---
+        const mediaList = document.getElementById('mediaList');
+        if (mediaList) {
+            Sortable.create(mediaList, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: async () => {
+                    const orderedIds = Array.from(mediaList.querySelectorAll('[data-id]'))
+                        .map(el => parseInt(el.dataset.id));
+
+                    const token = document.querySelector('[name=__RequestVerificationToken]').value;
+
+                    const resp = await fetch('/Admin/Media/Reorder?tripId=@Model.Id', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(orderedIds)
+                    });
+
+                    const toast = document.getElementById('reorderToast');
+                    if (resp.ok) {
+                        toast.style.display = 'inline';
+                        setTimeout(() => toast.style.display = 'none', 2000);
+                    } else {
+                        toast.textContent = '✗ Chyba při ukládání pořadí';
+                        toast.classList.replace('text-success', 'text-danger');
+                        toast.style.display = 'inline';
+                        setTimeout(() => { toast.style.display = 'none'; toast.textContent = '✓ Pořadí uloženo'; toast.classList.replace('text-danger', 'text-success'); }, 3000);
+                    }
+                }
+            });
         }
     </script>
 }
