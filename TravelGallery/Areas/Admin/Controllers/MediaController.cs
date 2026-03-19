@@ -44,6 +44,7 @@ public class MediaController : Controller
             .Select(m => (int?)m.SortOrder)
             .MaxAsync() ?? 0;
 
+        int savedCount = 0;
         foreach (var file in files)
         {
             if (file.Length == 0 || !_storage.IsAllowedExtension(file))
@@ -59,10 +60,15 @@ public class MediaController : Controller
                 Caption = Path.GetFileNameWithoutExtension(file.FileName),
                 SortOrder = ++maxOrder
             });
+            savedCount++;
         }
 
         await _db.SaveChangesAsync();
-        TempData["Success"] = "Soubory byly nahrány.";
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { count = savedCount });
+
+        TempData["Success"] = $"Nahráno {savedCount} souborů.";
         return RedirectToAction("Upload", new { tripId });
     }
 

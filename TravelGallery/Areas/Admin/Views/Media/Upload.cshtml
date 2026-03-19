@@ -13,6 +13,12 @@
         .drag-handle:hover { color: #6c757d; }
         .sortable-ghost { opacity: 0.4; }
         .sortable-chosen { box-shadow: 0 0 0 2px #0d6efd44; }
+        .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .preview-item { display: flex; flex-direction: column; }
+        .preview-thumb { aspect-ratio: 4/3; overflow: hidden; border-radius: 4px; background: #e9ecef; display: flex; align-items: center; justify-content: center; }
+        .preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-thumb .video-icon { font-size: 1.8rem; color: #6c757d; }
+        .preview-label { font-size: .7rem; color: #6c757d; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 }
 
@@ -37,9 +43,19 @@
                        class="d-none" />
                 <button type="button" class="btn btn-outline-secondary btn-sm"
                         onclick="document.getElementById('fileInput').click()">Vybrat soubory</button>
-                <div id="fileList" class="mt-2 small text-muted"></div>
             </div>
-            <button type="submit" class="btn btn-danger mt-3 w-100" id="uploadBtn" disabled>
+            <div id="previewGrid" class="preview-grid mt-3"></div>
+            <div id="progressWrap" class="mt-3" style="display:none;">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span id="progressLabel">Nahrávám…</span>
+                    <span id="progressPct">0 %</span>
+                </div>
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width:0%"></div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-danger mt-3 w-100" id="uploadBtn" disabled>
                 Nahrát vybrané soubory
             </button>
         </form>
@@ -91,31 +107,106 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <script>
-        // --- Upload drag & drop ---
+        // --- Upload drag & drop + preview ---
         const input = document.getElementById('fileInput');
         const uploadBtn = document.getElementById('uploadBtn');
-        const fileList = document.getElementById('fileList');
         const dropZone = document.getElementById('dropZone');
+        const previewGrid = document.getElementById('previewGrid');
+        const progressWrap = document.getElementById('progressWrap');
+        const progressBar = document.getElementById('progressBar');
+        const progressPct = document.getElementById('progressPct');
+        const progressLabel = document.getElementById('progressLabel');
 
-        input.addEventListener('change', () => {
-            updateFileList(input.files);
-        });
+        let selectedFiles = [];
+
+        input.addEventListener('change', () => handleFiles(input.files));
 
         dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
         dropZone.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            input.files = e.dataTransfer.files;
-            updateFileList(e.dataTransfer.files);
+            handleFiles(e.dataTransfer.files);
         });
 
-        function updateFileList(files) {
-            uploadBtn.disabled = files.length === 0;
-            fileList.textContent = files.length > 0
-                ? `Vybráno: ${Array.from(files).map(f => f.name).join(', ')}`
-                : '';
+        function handleFiles(files) {
+            selectedFiles = Array.from(files);
+            uploadBtn.disabled = selectedFiles.length === 0;
+            renderPreviews(selectedFiles);
         }
+
+        function renderPreviews(files) {
+            previewGrid.innerHTML = '';
+            files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+
+                const thumb = document.createElement('div');
+                thumb.className = 'preview-thumb';
+
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.onload = () => URL.revokeObjectURL(img.src);
+                    thumb.appendChild(img);
+                } else {
+                    const icon = document.createElement('span');
+                    icon.className = 'video-icon';
+                    icon.textContent = '▶';
+                    thumb.appendChild(icon);
+                }
+
+                const label = document.createElement('div');
+                label.className = 'preview-label';
+                label.textContent = file.name;
+                label.title = file.name;
+
+                item.appendChild(thumb);
+                item.appendChild(label);
+                previewGrid.appendChild(item);
+            });
+        }
+
+        uploadBtn.addEventListener('click', () => {
+            if (selectedFiles.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('__RequestVerificationToken',
+                document.querySelector('[name=__RequestVerificationToken]').value);
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/Admin/Media/Upload?tripId=@Model.Id');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.addEventListener('progress', e => {
+                if (!e.lengthComputable) return;
+                const pct = Math.round(e.loaded / e.total * 100);
+                progressBar.style.width = pct + '%';
+                progressPct.textContent = pct + ' %';
+            });
+
+            xhr.addEventListener('load', () => {
+                progressLabel.textContent = 'Hotovo!';
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-success');
+                progressBar.style.width = '100%';
+                progressPct.textContent = '100 %';
+                setTimeout(() => window.location.reload(), 600);
+            });
+
+            xhr.addEventListener('error', () => {
+                progressLabel.textContent = 'Chyba při nahrávání.';
+                progressBar.classList.replace('bg-primary', 'bg-danger');
+            });
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Nahrávám…';
+            progressWrap.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            xhr.send(formData);
+        });
 
         // --- Sortable reorder ---
         const mediaList = document.getElementById('mediaList');
