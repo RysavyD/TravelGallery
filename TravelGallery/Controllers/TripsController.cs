@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,13 @@ public class TripsController : Controller
             .Include(t => t.Tags)
             .OrderByDescending(t => t.Date)
             .AsQueryable();
+
+        // Non-admin users see only trips from their groups
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            query = query.Where(t => t.Groups.Any(g => g.Members.Any(m => m.Id == userId)));
+        }
 
         if (!string.IsNullOrEmpty(tag))
             query = query.Where(t => t.Tags.Any(tg => tg.Slug == tag));

@@ -13,4 +13,5 @@ public class Trip
 
     public ICollection<Media> Media { get; set; } = new List<Media>();
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+    public ICollection<TravelGroup> Groups { get; set; } = new List<TravelGroup>();
 }

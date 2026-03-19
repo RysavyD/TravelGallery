@@ -1,0 +1,82 @@
+@model TravelGallery.Areas.Admin.ViewModels.GroupFormViewModel
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Nová skupina" : $"Upravit skupinu – {Model.Name}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Zpět na skupiny</a>
+</div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label fw-semibold">Název skupiny</label>
+                <input asp-for="Name" class="form-control" placeholder="např. Rodina, Přátelé…" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-danger w-100">
+                @(isNew ? "Vytvořit skupinu" : "Uložit změny")
+            </button>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <h2 class="h6 fw-semibold mb-2">Výlety ve skupině</h2>
+            <div class="border rounded p-3" style="max-height: 420px; overflow-y: auto;">
+                @if (!Model.AllTrips.Any())
+                {
+                    <p class="text-muted small mb-0">Žádné výlety.</p>
+                }
+                else
+                {
+                    @foreach (var trip in Model.AllTrips)
+                    {
+                        var tripId = int.Parse(trip.Value);
+                        var isChecked = Model.SelectedTripIds.Contains(tripId);
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="SelectedTripIds" value="@trip.Value"
+                                   id="trip-@trip.Value"
+                                   @(isChecked ? "checked" : "") />
+                            <label class="form-check-label small" for="trip-@trip.Value">
+                                @trip.Text
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <h2 class="h6 fw-semibold mb-2">Členové skupiny</h2>
+            <div class="border rounded p-3" style="max-height: 420px; overflow-y: auto;">
+                @if (!Model.AllUsers.Any())
+                {
+                    <p class="text-muted small mb-0">Žádní uživatelé.</p>
+                }
+                else
+                {
+                    @foreach (var user in Model.AllUsers)
+                    {
+                        var isChecked = Model.SelectedUserIds.Contains(user.Value);
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="SelectedUserIds" value="@user.Value"
+                                   id="user-@user.Value"
+                                   @(isChecked ? "checked" : "") />
+                            <label class="form-check-label small" for="user-@user.Value">
+                                @user.Text
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,49 @@
+@model List<TravelGallery.Models.TravelGroup>
+@{
+    ViewData["Title"] = "Skupiny uživatelů";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Skupiny uživatelů</h1>
+    <a asp-action="Edit" class="btn btn-danger btn-sm">+ Nová skupina</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Zatím žádné skupiny. Vytvořte první skupinu.</p>
+}
+else
+{
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Název</th>
+                <th class="text-center">Výlety</th>
+                <th class="text-center">Členů</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var g in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@g.Name</td>
+                    <td class="text-center">@g.Trips.Count</td>
+                    <td class="text-center">@g.Members.Count</td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Edit" asp-route-id="@g.Id"
+                               class="btn btn-outline-secondary btn-sm">Upravit</a>
+                            <form asp-action="Delete" method="post"
+                                  onsubmit="return confirm('Smazat skupinu „@g.Name"?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@g.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Smazat</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

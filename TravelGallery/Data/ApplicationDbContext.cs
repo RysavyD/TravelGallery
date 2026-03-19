@@ -12,6 +12,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Media> Media { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Tag> Tags { get; set; }
+    public DbSet<TravelGroup> TravelGroups { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -36,5 +37,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<TravelGroup>()
+            .HasMany(g => g.Trips)
+            .WithMany(t => t.Groups)
+            .UsingEntity(j => j.ToTable("TravelGroupTrips"));
+
+        builder.Entity<TravelGroup>()
+            .HasMany(g => g.Members)
+            .WithMany(u => u.Groups)
+            .UsingEntity(j => j.ToTable("TravelGroupMembers"));
     }
 }
