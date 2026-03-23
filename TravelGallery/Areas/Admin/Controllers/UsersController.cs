@@ -94,6 +94,42 @@ public class UsersController : Controller
         return RedirectToAction("Index");
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ChangePassword(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null) return NotFound();
+
+        return View(new ChangePasswordViewModel
+        {
+            UserId = user.Id,
+            UserEmail = user.Email ?? string.Empty
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.FindByIdAsync(model.UserId);
+        if (user == null) return NotFound();
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            foreach (var err in result.Errors)
+                ModelState.AddModelError(string.Empty, err.Description);
+            return View(model);
+        }
+
+        TempData["Success"] = $"Heslo uživatele {user.Email} bylo změněno.";
+        return RedirectToAction("Index");
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAdmin(string id)
