@@ -48,6 +48,13 @@
         <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
             <h1 class="mb-0">@Model.Title</h1>
             <div class="d-flex gap-2 no-print flex-shrink-0 mt-1">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-area="Admin" asp-controller="Trips" asp-action="Edit" asp-route-id="@Model.Id"
+                       class="btn btn-outline-warning btn-sm">
+                        ✏ Editovat
+                    </a>
+                }
                 <button onclick="window.print()" class="btn btn-outline-secondary btn-sm" title="Tisk / Uložit jako PDF přes prohlížeč">
                     🖨 Vytisknout
                 </button>
