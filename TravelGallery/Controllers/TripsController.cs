@@ -27,7 +27,7 @@ public class TripsController : Controller
 
     private const int PageSize = 20;
 
-    public async Task<IActionResult> Index(string? tag, string? q, int page = 1)
+    public async Task<IActionResult> Index(string? tag, string? q, DateOnly? dateFrom, DateOnly? dateTo, int page = 1)
     {
         var query = _db.Trips
             .Include(t => t.Media)
@@ -53,6 +53,11 @@ public class TripsController : Controller
                 t.Description.Contains(search) ||
                 t.Tags.Any(tg => tg.Name.Contains(search)));
         }
+
+        if (dateFrom.HasValue)
+            query = query.Where(t => t.Date >= dateFrom.Value.ToDateTime(TimeOnly.MinValue));
+        if (dateTo.HasValue)
+            query = query.Where(t => t.Date <= dateTo.Value.ToDateTime(TimeOnly.MaxValue));
 
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
@@ -91,6 +96,8 @@ public class TripsController : Controller
 
         ViewBag.ActiveTag = tag;
         ViewBag.SearchQuery = q;
+        ViewBag.DateFrom = dateFrom?.ToString("yyyy-MM-dd");
+        ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         return View(viewModels);

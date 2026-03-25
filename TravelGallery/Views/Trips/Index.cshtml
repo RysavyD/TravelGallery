@@ -3,35 +3,22 @@
     ViewData["Title"] = "Výlety";
     var activeTag = ViewBag.ActiveTag as string;
     var searchQuery = ViewBag.SearchQuery as string;
-    var hasFilter = !string.IsNullOrEmpty(activeTag) || !string.IsNullOrEmpty(searchQuery);
+    var tripsWithCoords = Model.Where(t => t.Latitude.HasValue && t.Longitude.HasValue).ToList();
+    var hasMapTrips = tripsWithCoords.Any();
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var dateFrom = ViewBag.DateFrom as string;
+    var dateTo = ViewBag.DateTo as string;
+    var hasFilter = !string.IsNullOrEmpty(activeTag) || !string.IsNullOrEmpty(searchQuery)
+                    || !string.IsNullOrEmpty(dateFrom) || !string.IsNullOrEmpty(dateTo);
     var emptyMessage = hasFilter
         ? "Žádné výlety odpovídající vašemu hledání."
         : "Zatím nejste členem žádné skupiny, nebo vaše skupina neobsahuje žádné výlety.";
-    var tripsWithCoords = Model.Where(t => t.Latitude.HasValue && t.Longitude.HasValue).ToList();
-    var currentPage = (int)ViewBag.CurrentPage;
-    var totalPages = (int)ViewBag.TotalPages;
-}
-
-@if (tripsWithCoords.Any())
-{
-    <div class="row justify-content-center mb-3">
-        <div class="col-lg-10">
-            <button class="btn btn-sm btn-outline-secondary mb-2" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#trips-map-collapse"
-                    aria-expanded="false" aria-controls="trips-map-collapse"
-                    id="map-toggle-btn">
-                🗺 Zobrazit mapu výletů
-            </button>
-            <div class="collapse" id="trips-map-collapse">
-                <div id="trips-map" style="height:380px;border-radius:10px;" class="mb-2"></div>
-            </div>
-        </div>
-    </div>
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
             <h1 class="mb-0">Výlety</h1>
             @if (hasFilter)
             {
@@ -44,10 +31,33 @@
                     {
                         <span class="badge bg-primary fs-6">@activeTag</span>
                     }
+                    @if (!string.IsNullOrEmpty(dateFrom) || !string.IsNullOrEmpty(dateTo))
+                    {
+                        <span class="badge bg-warning text-dark fs-6">
+                            📅 @(dateFrom ?? "…") – @(dateTo ?? "…")
+                        </span>
+                    }
                     <a asp-action="Index" class="btn btn-sm btn-outline-secondary">× Zrušit filtr</a>
                 </div>
             }
         </div>
+
+        @if (hasMapTrips)
+        {
+            <button class="btn btn-sm btn-outline-secondary mb-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#trips-map-collapse"
+                    aria-expanded="false" aria-controls="trips-map-collapse"
+                    id="map-toggle-btn">
+                🗺 Zobrazit mapu výletů
+            </button>
+            <div class="collapse mb-3" id="trips-map-collapse">
+                <div id="trips-map" style="height:340px;border-radius:10px;"></div>
+            </div>
+        }
+        else if (Model.Any())
+        {
+            <p class="text-muted small mb-3">🗺 Žádný výlet na této stránce nemá zadané souřadnice.</p>
+        }
 
         @if (!Model.Any())
         {
@@ -122,7 +132,9 @@
                         <a class="page-link" asp-action="Index"
                            asp-route-page="@(currentPage - 1)"
                            asp-route-tag="@activeTag"
-                           asp-route-q="@searchQuery">‹</a>
+                           asp-route-q="@searchQuery"
+                           asp-route-dateFrom="@dateFrom"
+                           asp-route-dateTo="@dateTo">‹</a>
                     </li>
                     @for (var p = 1; p <= totalPages; p++)
                     {
@@ -130,14 +142,18 @@
                             <a class="page-link" asp-action="Index"
                                asp-route-page="@p"
                                asp-route-tag="@activeTag"
-                               asp-route-q="@searchQuery">@p</a>
+                               asp-route-q="@searchQuery"
+                               asp-route-dateFrom="@dateFrom"
+                               asp-route-dateTo="@dateTo">@p</a>
                         </li>
                     }
                     <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
                         <a class="page-link" asp-action="Index"
                            asp-route-page="@(currentPage + 1)"
                            asp-route-tag="@activeTag"
-                           asp-route-q="@searchQuery">›</a>
+                           asp-route-q="@searchQuery"
+                           asp-route-dateFrom="@dateFrom"
+                           asp-route-dateTo="@dateTo">›</a>
                     </li>
                 </ul>
             </nav>
@@ -145,7 +161,16 @@
     </div>
 </div>
 
-@if (tripsWithCoords.Any())
+@section NavFilter {
+    <input type="hidden" name="tag" value="@activeTag" />
+    <input type="date" name="dateFrom" value="@dateFrom"
+           class="form-control form-control-sm" style="width:130px;" title="Od" />
+    <span class="text-light small">–</span>
+    <input type="date" name="dateTo" value="@dateTo"
+           class="form-control form-control-sm" style="width:130px;" title="Do" />
+}
+
+@if (hasMapTrips)
 {
     @section Styles {
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
