@@ -25,7 +25,9 @@ public class TripsController : Controller
         _env = env;
     }
 
-    public async Task<IActionResult> Index(string? tag, string? q)
+    private const int PageSize = 20;
+
+    public async Task<IActionResult> Index(string? tag, string? q, int page = 1)
     {
         var query = _db.Trips
             .Include(t => t.Media)
@@ -52,7 +54,14 @@ public class TripsController : Controller
                 t.Tags.Any(tg => tg.Name.Contains(search)));
         }
 
-        var trips = await query.ToListAsync();
+        var totalCount = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
+        page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+
+        var trips = await query
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
+            .ToListAsync();
 
         var viewModels = trips.Select(t =>
         {
@@ -82,6 +91,8 @@ public class TripsController : Controller
 
         ViewBag.ActiveTag = tag;
         ViewBag.SearchQuery = q;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
         return View(viewModels);
     }
 

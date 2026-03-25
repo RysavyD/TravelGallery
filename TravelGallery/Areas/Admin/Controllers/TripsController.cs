@@ -150,4 +150,5 @@ public class TripsController : Controller
 
         await _db.SaveChangesAsync();
     }
+
 }

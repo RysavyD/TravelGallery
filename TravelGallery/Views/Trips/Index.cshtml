@@ -8,6 +8,8 @@
         ? "Žádné výlety odpovídající vašemu hledání."
         : "Zatím nejste členem žádné skupiny, nebo vaše skupina neobsahuje žádné výlety.";
     var tripsWithCoords = Model.Where(t => t.Latitude.HasValue && t.Longitude.HasValue).ToList();
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
 }
 
 @if (tripsWithCoords.Any())
@@ -111,6 +113,35 @@
                 </div>
             }
         </div>
+
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Stránkování" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-page="@(currentPage - 1)"
+                           asp-route-tag="@activeTag"
+                           asp-route-q="@searchQuery">‹</a>
+                    </li>
+                    @for (var p = 1; p <= totalPages; p++)
+                    {
+                        <li class="page-item @(p == currentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@p"
+                               asp-route-tag="@activeTag"
+                               asp-route-q="@searchQuery">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-page="@(currentPage + 1)"
+                           asp-route-tag="@activeTag"
+                           asp-route-q="@searchQuery">›</a>
+                    </li>
+                </ul>
+            </nav>
+        }
     </div>
 </div>
 
