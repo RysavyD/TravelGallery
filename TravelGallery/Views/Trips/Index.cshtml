@@ -108,7 +108,7 @@
                                 @foreach (var thumb in trip.ThumbnailUrls)
                                 {
                                     <img src="@thumb" alt="náhled" class="trip-thumb rounded"
-                                         style="width:100px;height:75px;object-fit:cover;" />
+                                         style="width:100px;height:75px;object-fit:cover;" loading="lazy" />
                                 }
                                 @if (trip.HasMoreMedia)
                                 {

@@ -76,7 +76,7 @@
                     <span class="drag-handle" title="Přetáhnout pro změnu pořadí">&#9776;</span>
                     @if (m.MediaType == TravelGallery.Models.MediaType.Image)
                     {
-                        <img src="/uploads/@Model.Id/thumbs/@m.FileName" class="media-thumb mb-2" alt="@m.Caption" />
+                        <img src="/uploads/@Model.Id/thumbs/@m.FileName" class="media-thumb mb-2" alt="@m.Caption" loading="lazy" />
                     }
                     else
                     {
