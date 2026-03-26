@@ -163,11 +163,13 @@
 
 @section NavFilter {
     <input type="hidden" name="tag" value="@activeTag" />
-    <input type="date" name="dateFrom" value="@dateFrom"
-           class="form-control form-control-sm" style="width:130px;" title="Od" />
-    <span class="text-light small">–</span>
-    <input type="date" name="dateTo" value="@dateTo"
-           class="form-control form-control-sm" style="width:130px;" title="Do" />
+    <div class="d-flex align-items-center gap-1">
+        <input type="date" name="dateFrom" value="@dateFrom"
+               class="form-control form-control-sm" style="min-width:110px;max-width:130px;" title="Od" />
+        <span class="text-light small">–</span>
+        <input type="date" name="dateTo" value="@dateTo"
+               class="form-control form-control-sm" style="min-width:110px;max-width:130px;" title="Do" />
+    </div>
 }
 
 @if (hasMapTrips)
