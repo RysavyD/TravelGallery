@@ -94,6 +94,7 @@ public class TripsController : Controller
             };
         }).ToList();
 
+        ViewBag.ShowSearch = true;
         ViewBag.ActiveTag = tag;
         ViewBag.SearchQuery = q;
         ViewBag.DateFrom = dateFrom?.ToString("yyyy-MM-dd");
