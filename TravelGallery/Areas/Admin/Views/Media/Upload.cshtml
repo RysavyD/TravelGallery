@@ -85,6 +85,20 @@
                         </div>
                     }
 
+                    @{
+                        var hasGps = m.Latitude.HasValue && m.Longitude.HasValue;
+                        var hasDate = m.DateTaken.HasValue;
+                        var hasCamera = !string.IsNullOrEmpty(m.CameraModel);
+                    }
+                    @if (hasGps || hasDate || hasCamera)
+                    {
+                        <div class="text-muted mb-1" style="font-size:.65rem;line-height:1.3;">
+                            @if (hasDate) { <span title="@m.DateTaken!.Value.ToString("d.M.yyyy H:mm:ss")">📅 @m.DateTaken!.Value.ToString("d.M.yyyy")</span> }
+                            @if (hasCamera) { <span>📷 @m.CameraModel</span> }
+                            @if (hasGps) { <span title="@m.Latitude, @m.Longitude">📍 GPS</span> }
+                        </div>
+                    }
+
                     <form asp-action="UpdateCaption" method="post" class="d-flex gap-1 mb-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@m.Id" />

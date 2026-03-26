@@ -3,6 +3,8 @@
     ViewData["Title"] = Model.Title;
     var images = Model.Media.Where(m => m.MediaType == TravelGallery.Models.MediaType.Image).ToList();
     var allMedia = Model.Media.OrderBy(m => m.SortOrder).ToList();
+    var geoPhotos = allMedia.Where(m => m.Latitude.HasValue && m.Longitude.HasValue).ToList();
+    var showPhotoMap = geoPhotos.Count >= 10;
 }
 
 @section Styles {
@@ -100,6 +102,14 @@
             </div>
         }
 
+        @if (showPhotoMap)
+        {
+            <div class="mb-5">
+                <h2 class="h5 mb-2">Mapa fotek (@geoPhotos.Count)</h2>
+                <div id="photo-map" style="height:400px;border-radius:8px;"></div>
+            </div>
+        }
+
         @if (allMedia.Any())
         {
             <h2 class="h5 mb-3">Fotografie (@allMedia.Count)</h2>
@@ -133,6 +143,16 @@
                         {
                             <div class="gallery-caption">@m.Caption</div>
                         }
+                        @{
+                            var exifParts = new List<string>();
+                            if (m.DateTaken.HasValue) exifParts.Add("📅 " + m.DateTaken.Value.ToString("d.M.yyyy H:mm"));
+                            if (!string.IsNullOrEmpty(m.CameraModel)) exifParts.Add("📷 " + m.CameraModel);
+                            if (m.Latitude.HasValue) exifParts.Add("📍");
+                        }
+                        @if (exifParts.Any())
+                        {
+                            <div class="gallery-caption" style="font-size:.7rem;opacity:.7;">@string.Join(" · ", exifParts)</div>
+                        }
                     </div>
                 }
             </div>
@@ -145,9 +165,12 @@
 </div>
 
 @section Scripts {
-    @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+    @if (Model.Latitude.HasValue && Model.Longitude.HasValue || showPhotoMap)
     {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    }
+    @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+    {
         <script>
             const map = L.map('trip-map').setView([@Model.Latitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture), @Model.Longitude.Value.ToString("G", System.Globalization.CultureInfo.InvariantCulture)], 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -159,18 +182,59 @@
                 .openPopup();
         </script>
     }
+    @if (showPhotoMap)
+    {
+        <script>
+            (function() {
+                const photos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    geoPhotos.Select(p => new {
+                        lat = p.Latitude!.Value,
+                        lng = p.Longitude!.Value,
+                        thumb = $"/uploads/{Model.Id}/thumbs/{p.FileName}",
+                        caption = p.Caption,
+                        id = p.Id
+                    }),
+                    new System.Text.Json.JsonSerializerOptions {
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Default
+                    }
+                ));
+                const map = L.map('photo-map');
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+                const bounds = [];
+                photos.forEach(p => {
+                    const popup = `<div style="text-align:center;">
+                        <img src="${p.thumb}" style="max-width:120px;border-radius:4px;" /><br/>
+                        <small>${p.caption || ''}</small></div>`;
+                    L.marker([p.lat, p.lng]).addTo(map).bindPopup(popup);
+                    bounds.push([p.lat, p.lng]);
+                });
+                map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+            })();
+        </script>
+    }
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe-lightbox.esm.js';
         import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe.esm.js';
 
         const items = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-            allMedia.Select(m => new {
-                src = $"/uploads/{Model.Id}/{m.FileName}",
-                thumb = m.MediaType == TravelGallery.Models.MediaType.Image ? $"/uploads/{Model.Id}/thumbs/{m.FileName}" : null,
-                type = m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image",
-                caption = m.Caption,
-                w = 1920,
-                h = 1080
+            allMedia.Select(m => {
+                var exifLine = new List<string>();
+                if (m.DateTaken.HasValue) exifLine.Add("📅 " + m.DateTaken.Value.ToString("d.M.yyyy H:mm"));
+                if (!string.IsNullOrEmpty(m.CameraModel)) exifLine.Add("📷 " + m.CameraModel);
+                if (!string.IsNullOrEmpty(m.ExifSummary)) exifLine.Add(m.ExifSummary);
+                var fullCaption = m.Caption ?? "";
+                if (exifLine.Any()) fullCaption += (string.IsNullOrEmpty(fullCaption) ? "" : "<br/>") +
+                    "<span style='font-size:.75rem;opacity:.7;'>" + string.Join(" · ", exifLine) + "</span>";
+                return new {
+                    src = $"/uploads/{Model.Id}/{m.FileName}",
+                    thumb = m.MediaType == TravelGallery.Models.MediaType.Image ? $"/uploads/{Model.Id}/thumbs/{m.FileName}" : (string?)null,
+                    type = m.MediaType == TravelGallery.Models.MediaType.Video ? "video" : "image",
+                    caption = fullCaption,
+                    w = 1920,
+                    h = 1080
+                };
             }),
             new System.Text.Json.JsonSerializerOptions
             {

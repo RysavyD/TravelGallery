@@ -50,7 +50,7 @@ public class MediaController : Controller
             if (file.Length == 0 || !_storage.IsAllowedExtension(file))
                 continue;
 
-            var (fileName, mediaType) = await _storage.SaveAsync(file, tripId);
+            var (fileName, mediaType, exif) = await _storage.SaveAsync(file, tripId);
 
             _db.Media.Add(new Media
             {
@@ -58,7 +58,12 @@ public class MediaController : Controller
                 FileName = fileName,
                 MediaType = mediaType,
                 Caption = Path.GetFileNameWithoutExtension(file.FileName),
-                SortOrder = ++maxOrder
+                SortOrder = ++maxOrder,
+                DateTaken = exif?.DateTaken,
+                Latitude = exif?.Latitude,
+                Longitude = exif?.Longitude,
+                CameraModel = exif?.CameraModel,
+                ExifSummary = exif?.ExifSummary
             });
             savedCount++;
         }

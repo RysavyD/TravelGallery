@@ -40,6 +40,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     await SeedData.InitializeAsync(scope.ServiceProvider, builder.Configuration);
+
+    if (args.Contains("--seed-exif-test"))
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+        await TravelGallery.SeedExifTestData.SeedAsync(db, env);
+        Console.WriteLine("EXIF test data seeded.");
+        return;
+    }
 }
 
 if (!app.Environment.IsDevelopment())
