@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="cs">
+<script>
+    (function() {
+        var saved = localStorage.getItem('theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+    })();
+</script>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -51,7 +58,12 @@
                             </svg>
                         </button>
                     </form>
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item">
+                            <button type="button" class="btn btn-link nav-link px-2" id="themeToggle"
+                                    title="Přepnout tmavý/světlý režim" style="font-size:1.1rem;text-decoration:none;">
+                            </button>
+                        </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
@@ -90,8 +102,51 @@
         </main>
     </div>
 
+    <style>
+        [data-bs-theme="dark"] body { background-color: #212529 !important; color: #dee2e6 !important; }
+        [data-bs-theme="dark"] .card { background-color: #2b3035; border-color: #495057; }
+        [data-bs-theme="dark"] .tl-item { background: #212529; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+        [data-bs-theme="dark"] .tl-year span { background: #495057; }
+        [data-bs-theme="dark"] .tl-month span { background: #343a40; color: #adb5bd; }
+        [data-bs-theme="dark"] .visual-timeline::before { background: #495057; }
+        [data-bs-theme="dark"] .gallery-item img { opacity: .92; }
+        [data-bs-theme="dark"] .gallery-caption { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .drop-zone { border-color: #6c757d; }
+        [data-bs-theme="dark"] .media-card { background: #212529; border-color: #495057; }
+        [data-bs-theme="dark"] a.text-dark { color: #dee2e6 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #adb5bd !important; }
+        [data-bs-theme="dark"] .badge.bg-light { background-color: #343a40 !important; color: #dee2e6 !important; }
+        [data-bs-theme="dark"] h1, [data-bs-theme="dark"] h2, [data-bs-theme="dark"] h3 { color: #f8f9fa; }
+    </style>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            var toggle = document.getElementById('themeToggle');
+            function getTheme() {
+                return document.documentElement.getAttribute('data-bs-theme') || 'light';
+            }
+            function updateIcon() {
+                toggle.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+            }
+            updateIcon();
+            toggle.addEventListener('click', function() {
+                var next = getTheme() === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', next);
+                localStorage.setItem('theme', next);
+                updateIcon();
+            });
+            // Listen for OS theme change (only if user hasn't manually overridden)
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    var t = e.matches ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-bs-theme', t);
+                    updateIcon();
+                }
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

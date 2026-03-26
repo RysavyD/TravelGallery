@@ -6,6 +6,13 @@
 
 <!DOCTYPE html>
 <html lang="cs">
+<script>
+    (function() {
+        var saved = localStorage.getItem('theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+    })();
+</script>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,7 +20,7 @@
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg?v=3" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 </head>
-<body class="bg-light">
+<body class="bg-body">
     <div class="container">
         <div class="row justify-content-center mt-5">
             <div class="col-md-5">
