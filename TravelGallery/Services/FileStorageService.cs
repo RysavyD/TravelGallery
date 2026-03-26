@@ -49,6 +49,7 @@ public class FileStorageService
         ExifData? exif = null;
         if (mediaType == MediaType.Image)
         {
+            await CompressOriginalAsync(filePath);
             await CreateThumbnailAsync(filePath, uploadDir, fileName);
             exif = ExtractExifData(filePath);
         }
@@ -146,6 +147,24 @@ public class FileStorageService
     {
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         return ImageExtensions.Contains(ext) || VideoExtensions.Contains(ext);
+    }
+
+    private const int MaxImageDimension = 2560;
+
+    private static async Task CompressOriginalAsync(string filePath)
+    {
+        using var image = await Image.LoadAsync(filePath);
+
+        if (image.Width <= MaxImageDimension && image.Height <= MaxImageDimension)
+            return;
+
+        image.Mutate(x => x.Resize(new ResizeOptions
+        {
+            Mode = ResizeMode.Max,
+            Size = new Size(MaxImageDimension, MaxImageDimension)
+        }));
+
+        await image.SaveAsync(filePath);
     }
 
     private static async Task CreateThumbnailAsync(string sourcePath, string uploadDir, string fileName)
