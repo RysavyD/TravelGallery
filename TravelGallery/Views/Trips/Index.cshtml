@@ -66,61 +66,125 @@
             </div>
         }
 
-        <div class="timeline">
+        <style>
+            .visual-timeline { position: relative; padding: 20px 0; }
+            .visual-timeline::before {
+                content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+                top: 0; bottom: 0; width: 3px; background: #dee2e6;
+            }
+            .tl-year { position: relative; text-align: center; margin: 30px 0 20px; }
+            .tl-year span {
+                background: #343a40; color: #fff; padding: 6px 20px; border-radius: 20px;
+                font-weight: 700; font-size: 1.1rem; position: relative; z-index: 1;
+            }
+            .tl-month { position: relative; text-align: center; margin: 15px 0 10px; }
+            .tl-month span {
+                background: #e9ecef; color: #495057; padding: 3px 14px; border-radius: 12px;
+                font-size: .85rem; font-weight: 600; position: relative; z-index: 1;
+            }
+            .tl-item {
+                position: relative; width: 45%; padding: 15px; background: #fff;
+                border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px;
+            }
+            .tl-item.tl-left { margin-left: 5%; }
+            .tl-item.tl-right { margin-left: 50%; }
+            .tl-item::before {
+                content: ''; position: absolute; top: 20px; width: 12px; height: 12px;
+                background: #0d6efd; border: 3px solid #fff; border-radius: 50%;
+                box-shadow: 0 0 0 2px #0d6efd; z-index: 1;
+            }
+            .tl-item.tl-left::before { right: -31px; }
+            .tl-item.tl-right::before { left: -31px; }
+            .tl-item::after {
+                content: ''; position: absolute; top: 22px; width: 24px; height: 2px; background: #dee2e6;
+            }
+            .tl-item.tl-left::after { right: -24px; }
+            .tl-item.tl-right::after { left: -24px; }
+            @@media (max-width: 767px) {
+                .visual-timeline::before { left: 20px; }
+                .tl-item { width: calc(100% - 50px); margin-left: 50px !important; }
+                .tl-item::before { left: -35px !important; right: auto !important; }
+                .tl-item::after { left: -28px !important; right: auto !important; }
+                .tl-year, .tl-month { text-align: left; padding-left: 50px; }
+            }
+        </style>
+
+        <div class="visual-timeline">
+            @{
+                int? lastYear = null;
+                int? lastMonth = null;
+                int itemIndex = 0;
+                var csCulture = new System.Globalization.CultureInfo("cs-CZ");
+            }
             @foreach (var trip in Model)
             {
-                <div class="card mb-4 shadow-sm trip-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h2 class="h5 mb-0">
-                                <a asp-controller="Trips" asp-action="Detail" asp-route-id="@trip.Id"
-                                   class="text-decoration-none text-dark stretched-link">
-                                    @trip.Title
-                                </a>
-                            </h2>
-                            <span class="badge bg-secondary ms-2 text-nowrap">
-                                @trip.Date.ToString("d. M. yyyy")
-                            </span>
-                        </div>
+                var year = trip.Date.Year;
+                var month = trip.Date.Month;
 
-                        @if (!string.IsNullOrEmpty(trip.ShortDescription))
-                        {
-                            <p class="text-muted small mb-2">@trip.ShortDescription</p>
-                        }
+                if (lastYear != year)
+                {
+                    <div class="tl-year"><span>@year</span></div>
+                    lastYear = year;
+                    lastMonth = null;
+                }
 
-                        @if (trip.Tags.Any())
-                        {
-                            <div class="d-flex flex-wrap gap-1 mb-3 position-relative" style="z-index:1;">
-                                @foreach (var t in trip.Tags)
-                                {
-                                    var tagCss = t.Slug == activeTag ? "bg-primary" : "bg-light text-dark border";
-                                    <a asp-action="Index" asp-route-tag="@t.Slug" asp-route-q="@searchQuery"
-                                       class="badge text-decoration-none @tagCss">
-                                        @t.Name
-                                    </a>
-                                }
-                            </div>
-                        }
+                if (lastMonth != month)
+                {
+                    <div class="tl-month"><span>@trip.Date.ToString("MMMM", csCulture)</span></div>
+                    lastMonth = month;
+                }
 
-                        @if (trip.ThumbnailUrls.Any())
+                var side = itemIndex % 2 == 0 ? "tl-left" : "tl-right";
+                <div class="tl-item @side">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h2 class="h6 mb-0">
+                            <a asp-controller="Trips" asp-action="Detail" asp-route-id="@trip.Id"
+                               class="text-decoration-none text-dark">
+                                @trip.Title
+                            </a>
+                        </h2>
+                    </div>
+                    <div class="text-muted" style="font-size:.8rem;">
+                        @trip.Date.ToString("d. MMMM yyyy", csCulture)
+                        @if (trip.MediaCount > 0)
                         {
-                            <div class="d-flex gap-2 flex-wrap">
-                                @foreach (var thumb in trip.ThumbnailUrls)
-                                {
-                                    <img src="@thumb" alt="náhled" class="trip-thumb rounded"
-                                         style="width:100px;height:75px;object-fit:cover;" loading="lazy" />
-                                }
-                                @if (trip.HasMoreMedia)
-                                {
-                                    <div class="trip-thumb-more rounded d-flex align-items-center justify-content-center bg-secondary text-white"
-                                         style="width:100px;height:75px;font-size:0.85rem;">
-                                        +@(trip.MediaCount - trip.ThumbnailUrls.Count) dalších
-                                    </div>
-                                }
-                            </div>
+                            <text> · 📸 @trip.MediaCount</text>
                         }
                     </div>
+
+                    @if (!string.IsNullOrEmpty(trip.ShortDescription))
+                    {
+                        <p class="text-muted small mb-2 mt-1" style="line-height:1.4;">
+                            @(trip.ShortDescription.Length > 120 ? trip.ShortDescription[..120] + "…" : trip.ShortDescription)
+                        </p>
+                    }
+
+                    @if (trip.Tags.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            @foreach (var t in trip.Tags)
+                            {
+                                var tagCss = t.Slug == activeTag ? "bg-primary" : "bg-light text-dark border";
+                                <a asp-action="Index" asp-route-tag="@t.Slug" asp-route-q="@searchQuery"
+                                   class="badge text-decoration-none @tagCss" style="font-size:.7rem;">
+                                    @t.Name
+                                </a>
+                            }
+                        </div>
+                    }
+
+                    @if (trip.ThumbnailUrls.Any())
+                    {
+                        <div class="d-flex gap-1 flex-wrap">
+                            @foreach (var thumb in trip.ThumbnailUrls)
+                            {
+                                <img src="@thumb" alt="náhled" class="rounded"
+                                     style="width:50px;height:38px;object-fit:cover;" loading="lazy" />
+                            }
+                        </div>
+                    }
                 </div>
+                itemIndex++;
             }
         </div>
 
