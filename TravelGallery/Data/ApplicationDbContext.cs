@@ -13,6 +13,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<TravelGroup> TravelGroups { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -47,5 +48,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasMany(g => g.Members)
             .WithMany(u => u.Groups)
             .UsingEntity(j => j.ToTable("TravelGroupMembers"));
+
+        builder.Entity<RefreshToken>(e =>
+        {
+            e.HasIndex(r => r.Token).IsUnique();
+            e.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
