@@ -6,6 +6,15 @@
 # dotenv files
 .env
 
+# Uploaded files (user content)
+**/wwwroot/uploads/
+
+# Test/debug scripts
+*.ps1
+cookies.txt
+login.html
+nul
+
 # User-specific files
 *.rsuser
 *.suo
