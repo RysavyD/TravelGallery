@@ -23,4 +23,5 @@ public class TripFormViewModel
 
     [Range(-180, 180, ErrorMessage = "Zeměpisná délka musí být mezi -180 a 180")]
     public double? Longitude { get; set; }
+
 }

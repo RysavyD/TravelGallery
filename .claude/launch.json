@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "TravelGallery",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "C:/Dusan/Holy/src/TravelGallery/TravelGallery.csproj", "--no-build"],
+      "port": 5117
+    }
+  ]
+}
