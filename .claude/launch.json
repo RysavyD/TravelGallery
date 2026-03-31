@@ -4,7 +4,7 @@
     {
       "name": "TravelGallery",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "C:/Dusan/Holy/src/TravelGallery/TravelGallery.csproj", "--no-build"],
+      "runtimeArgs": ["run", "--project", "C:/Dusan/Holy/src/backend/TravelGallery/TravelGallery.csproj", "--no-build"],
       "port": 5117
     }
   ]
