@@ -1,4 +1,5 @@
 using System.Globalization;
+using ImageMagick;
 using MetadataExtractor;
 using Directory = System.IO.Directory;
 using MetadataExtractor.Formats.Exif;
@@ -20,7 +21,7 @@ public class FileStorageService
     private readonly IWebHostEnvironment _env;
 
     private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-        { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif" };
 
     private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
         { ".mp4", ".mov", ".avi", ".webm" };
@@ -49,9 +50,22 @@ public class FileStorageService
         ExifData? exif = null;
         if (mediaType == MediaType.Image)
         {
+            // Extract EXIF before any conversion (MetadataExtractor reads HEIC natively)
+            exif = ExtractExifData(filePath);
+
+            // Convert HEIC/HEIF to JPEG (ImageSharp doesn't support HEIC)
+            if (IsHeic(ext))
+            {
+                var jpegFileName = Path.ChangeExtension(fileName, ".jpg");
+                var jpegPath = Path.Combine(uploadDir, jpegFileName);
+                ConvertHeicToJpeg(filePath, jpegPath);
+                File.Delete(filePath);
+                filePath = jpegPath;
+                fileName = jpegFileName;
+            }
+
             await CompressOriginalAsync(filePath);
             await CreateThumbnailAsync(filePath, uploadDir, fileName);
-            exif = ExtractExifData(filePath);
         }
 
         return (fileName, mediaType, exif);
@@ -165,6 +179,17 @@ public class FileStorageService
         }));
 
         await image.SaveAsync(filePath);
+    }
+
+    private static bool IsHeic(string ext) =>
+        ext is ".heic" or ".heif";
+
+    private static void ConvertHeicToJpeg(string heicPath, string jpegPath)
+    {
+        using var image = new MagickImage(heicPath);
+        image.Format = MagickFormat.Jpeg;
+        image.Quality = 90;
+        image.Write(jpegPath);
     }
 
     private static async Task CreateThumbnailAsync(string sourcePath, string uploadDir, string fileName)
