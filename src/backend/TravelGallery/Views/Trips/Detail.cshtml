@@ -268,54 +268,40 @@
                     pswp.init();
                 } else {
                     const imageIdx = items.slice(0, idx + 1).filter(i => i.type === 'image').length - 1;
-
                     const imageItems = items.filter(i => i.type === 'image');
-                    const lightbox2 = new PhotoSwipeLightbox({
-                        dataSource: imageItems.map(i => ({ src: i.src, width: i.w, height: i.h, alt: i.caption })),
-                        pswpModule: PhotoSwipe
-                    });
 
-                    // Dynamicky zjistit rozměry obrázků, pokud jsou výchozí
-                    lightbox2.addFilter('itemData', (itemData, index) => {
-                        if (itemData.width === 0 || itemData.height === 0) {
-                            itemData.width = 1920;
-                            itemData.height = 1080;
-                        }
-                        return itemData;
-                    });
-
-                    lightbox2.on('contentLoad', (e) => {
-                        const { content } = e;
-                        if (content.type === 'image') {
-                            const img = new Image();
-                            img.onload = () => {
-                                content.width = img.naturalWidth;
-                                content.height = img.naturalHeight;
-                                content.slide && content.slide.updateContentSize(true);
-                            };
-                            img.src = content.data.src;
-                        }
-                    });
-
-                    lightbox2.on('uiRegister', function () {
-                        lightbox2.pswp.ui.registerElement({
-                            name: 'custom-caption',
-                            className: 'pswp__custom-caption',
-                            order: 9,
-                            isButton: false,
-                            appendTo: 'root',
-                            onInit: (el, pswp) => {
-                                pswp.on('change', () => {
-                                    const caption = pswp.currSlide.data.alt;
-                                    el.innerHTML = caption || '';
-                                    el.hidden = !caption;
-                                });
-                            }
+                    // Načíst skutečné rozměry všech obrázků před otevřením lightboxu
+                    Promise.all(imageItems.map(i => new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = () => resolve({ ...i, w: img.naturalWidth, h: img.naturalHeight });
+                        img.onerror = () => resolve({ ...i, w: 1920, h: 1080 });
+                        img.src = i.src;
+                    }))).then(loadedItems => {
+                        const lightbox2 = new PhotoSwipeLightbox({
+                            dataSource: loadedItems.map(i => ({ src: i.src, width: i.w, height: i.h, alt: i.caption })),
+                            pswpModule: PhotoSwipe
                         });
-                    });
 
-                    lightbox2.init();
-                    lightbox2.loadAndOpen(Math.max(0, imageIdx));
+                        lightbox2.on('uiRegister', function () {
+                            lightbox2.pswp.ui.registerElement({
+                                name: 'custom-caption',
+                                className: 'pswp__custom-caption',
+                                order: 9,
+                                isButton: false,
+                                appendTo: 'root',
+                                onInit: (el, pswp) => {
+                                    pswp.on('change', () => {
+                                        const caption = pswp.currSlide.data.alt;
+                                        el.innerHTML = caption || '';
+                                        el.hidden = !caption;
+                                    });
+                                }
+                            });
+                        });
+
+                        lightbox2.init();
+                        lightbox2.loadAndOpen(Math.max(0, imageIdx));
+                    });
                 }
             });
         });
