@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "TravelGallery Admin",
+    "slug": "travelgallery-admin",
+    "version": "1.0.0",
+    "scheme": "travelgallery",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "cz.traveler.admin",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Potřebujeme přístup k poloze pro přidání GPS souřadnic k výletu.",
+        "NSCameraUsageDescription": "Potřebujeme přístup k fotoaparátu pro focení výletových fotek.",
+        "NSPhotoLibraryUsageDescription": "Potřebujeme přístup ke galerii pro výběr fotek k výletu."
+      }
+    },
+    "android": {
+      "package": "cz.traveler.admin",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Potřebujeme přístup k poloze pro přidání GPS souřadnic k výletu."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Potřebujeme přístup ke galerii pro výběr fotek k výletu.",
+          "cameraPermission": "Potřebujeme přístup k fotoaparátu pro focení výletových fotek."
+        }
+      ]
+    ]
+  }
+}
