@@ -42,7 +42,7 @@ public class MediaController : ControllerBase
 
     [HttpPost]
     [RequestSizeLimit(50_000_000)]
-    public async Task<IActionResult> Upload(int tripId, [FromForm] List<IFormFile> files)
+    public async Task<IActionResult> UploadMedia(int tripId, [FromForm] List<IFormFile> files)
     {
         var trip = await _db.Trips.AnyAsync(t => t.Id == tripId);
         if (!trip) return NotFound(new { message = "Výlet nenalezen." });
