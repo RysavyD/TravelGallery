@@ -135,7 +135,7 @@
                 }
 
                 var side = itemIndex % 2 == 0 ? "tl-left" : "tl-right";
-                <div class="tl-item @side">
+                <div class="tl-item @side" data-trip-url="@Url.Action("Detail", "Trips", new { id = trip.Id })" style="cursor:pointer;">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <h2 class="h6 mb-0">
                             <a asp-controller="Trips" asp-action="Detail" asp-route-id="@trip.Id"
@@ -285,6 +285,17 @@
                     bounds.push([t.lat, t.lng]);
                 });
                 map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+            });
+        </script>
+        <script>
+            // Klik na celou kartu výletu navigiuje na detail, ale vnitřní odkazy fungují dál
+            document.querySelectorAll('.tl-item[data-trip-url]').forEach(card => {
+                card.addEventListener('click', e => {
+                    // Pokud uživatel klikl na odkaz/tlačítko/obrázek nebo označuje text, nic nedělat
+                    if (e.target.closest('a, button, input, select, textarea')) return;
+                    if (window.getSelection().toString()) return;
+                    window.location.href = card.dataset.tripUrl;
+                });
             });
         </script>
     }
