@@ -113,6 +113,33 @@ public class TripsController : Controller
 
         if (trip == null) return NotFound();
 
+        // Zjistit sousední výlety (podle data) se stejnými právy jako v Index
+        var navQuery = _db.Trips.AsQueryable();
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            navQuery = navQuery.Where(t => t.Groups.Any(g => g.Members.Any(m => m.Id == userId)));
+        }
+
+        // Starší výlet = menší datum (nebo stejné datum a menší Id pro stabilitu)
+        var previousTrip = await navQuery
+            .Where(t => t.Date < trip.Date || (t.Date == trip.Date && t.Id < trip.Id))
+            .OrderByDescending(t => t.Date).ThenByDescending(t => t.Id)
+            .Select(t => new { t.Id, t.Title })
+            .FirstOrDefaultAsync();
+
+        // Novější výlet = větší datum (nebo stejné datum a větší Id)
+        var nextTrip = await navQuery
+            .Where(t => t.Date > trip.Date || (t.Date == trip.Date && t.Id > trip.Id))
+            .OrderBy(t => t.Date).ThenBy(t => t.Id)
+            .Select(t => new { t.Id, t.Title })
+            .FirstOrDefaultAsync();
+
+        ViewBag.PreviousTripId = previousTrip?.Id;
+        ViewBag.PreviousTripTitle = previousTrip?.Title;
+        ViewBag.NextTripId = nextTrip?.Id;
+        ViewBag.NextTripTitle = nextTrip?.Title;
+
         return View(trip);
     }
 

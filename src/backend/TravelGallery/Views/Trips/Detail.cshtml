@@ -47,6 +47,42 @@
             </ol>
         </nav>
 
+        @{
+            var prevId = ViewBag.PreviousTripId as int?;
+            var nextId = ViewBag.NextTripId as int?;
+            var prevTitle = ViewBag.PreviousTripTitle as string;
+            var nextTitle = ViewBag.NextTripTitle as string;
+        }
+        @if (prevId.HasValue || nextId.HasValue)
+        {
+            <nav class="d-flex justify-content-between align-items-stretch gap-2 mb-3 no-print" aria-label="Navigace mezi výlety">
+                @if (prevId.HasValue)
+                {
+                    <a asp-action="Detail" asp-route-id="@prevId"
+                       class="btn btn-outline-secondary flex-fill text-start d-flex flex-column" style="min-height:56px;">
+                        <small class="text-muted">← Starší výlet</small>
+                        <span class="text-truncate fw-semibold">@prevTitle</span>
+                    </a>
+                }
+                else
+                {
+                    <span class="flex-fill"></span>
+                }
+                @if (nextId.HasValue)
+                {
+                    <a asp-action="Detail" asp-route-id="@nextId"
+                       class="btn btn-outline-secondary flex-fill text-end d-flex flex-column" style="min-height:56px;">
+                        <small class="text-muted">Novější výlet →</small>
+                        <span class="text-truncate fw-semibold">@nextTitle</span>
+                    </a>
+                }
+                else
+                {
+                    <span class="flex-fill"></span>
+                }
+            </nav>
+        }
+
         <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
             <h1 class="mb-0">@Model.Title</h1>
             <div class="d-flex gap-2 no-print flex-shrink-0 mt-1">
