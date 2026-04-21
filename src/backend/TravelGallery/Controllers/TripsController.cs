@@ -106,6 +106,40 @@ public class TripsController : Controller
         return View(viewModels);
     }
 
+    public async Task<IActionResult> Map()
+    {
+        var query = _db.Trips
+            .Where(t => t.Latitude.HasValue && t.Longitude.HasValue)
+            .AsQueryable();
+
+        if (_groupsEnabled && !User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            query = query.Where(t => t.Groups.Any(g => g.Members.Any(m => m.Id == userId)));
+        }
+
+        var trips = await query
+            .OrderByDescending(t => t.Date)
+            .Select(t => new
+            {
+                id = t.Id,
+                title = t.Title,
+                date = t.Date,
+                lat = t.Latitude!.Value,
+                lng = t.Longitude!.Value,
+                mediaCount = t.Media.Count,
+                thumbUrl = t.Media
+                    .OrderBy(m => m.SortOrder)
+                    .Where(m => m.MediaType == MediaType.Image)
+                    .Select(m => $"/uploads/{t.Id}/thumbs/{m.FileName}")
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        ViewBag.Trips = trips;
+        return View();
+    }
+
     public async Task<IActionResult> Detail(int id)
     {
         var trip = await _db.Trips

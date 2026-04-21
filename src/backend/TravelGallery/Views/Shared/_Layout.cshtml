@@ -33,6 +33,9 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Trips" asp-action="Index">Výlety</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Trips" asp-action="Map">🗺 Mapa</a>
+                        </li>
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
