@@ -113,6 +113,13 @@ public class TripsController : Controller
 
         if (trip == null) return NotFound();
 
+        // Počítat návštěvy pouze běžných uživatelů (ne admina)
+        if (!User.IsInRole("Admin"))
+        {
+            trip.ViewCount++;
+            await _db.SaveChangesAsync();
+        }
+
         // Zjistit sousední výlety (podle data) se stejnými právy jako v Index
         var navQuery = _db.Trips.AsQueryable();
         if (!User.IsInRole("Admin"))

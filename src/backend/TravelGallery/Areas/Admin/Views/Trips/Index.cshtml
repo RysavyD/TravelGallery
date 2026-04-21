@@ -21,6 +21,7 @@ else
                     <th>Název</th>
                     <th>Datum</th>
                     <th>Médií</th>
+                    <th title="Počet zobrazení uživateli (bez admina)">👁 Zobrazení</th>
                     <th></th>
                 </tr>
             </thead>
@@ -31,6 +32,7 @@ else
                         <td>@trip.Title</td>
                         <td>@trip.Date.ToString("d. M. yyyy")</td>
                         <td>@trip.Media.Count</td>
+                        <td>@trip.ViewCount</td>
                         <td class="text-end">
                             <a asp-action="Edit" asp-route-id="@trip.Id" class="btn btn-sm btn-outline-secondary">Upravit</a>
                             <a asp-area="Admin" asp-controller="Media" asp-action="Upload" asp-route-tripId="@trip.Id"
