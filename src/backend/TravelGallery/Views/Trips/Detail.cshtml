@@ -3,8 +3,14 @@
     ViewData["Title"] = Model.Title;
     var images = Model.Media.Where(m => m.MediaType == TravelGallery.Models.MediaType.Image).ToList();
     var allMedia = Model.Media.OrderBy(m => m.SortOrder).ToList();
-    var geoPhotos = allMedia.Where(m => m.Latitude.HasValue && m.Longitude.HasValue).ToList();
+    // Pro trasu řadíme podle času pořízení (s fallbackem na CreatedAt)
+    var geoPhotos = allMedia
+        .Where(m => m.Latitude.HasValue && m.Longitude.HasValue)
+        .OrderBy(m => m.DateTaken ?? m.CreatedAt)
+        .ToList();
     var showPhotoMap = geoPhotos.Count >= 10;
+    // Trasa = aspoň 2 geotagované fotky s časem pořízení (jinak nevíme pořadí)
+    var showRoute = geoPhotos.Count(p => p.DateTaken.HasValue) >= 2;
 }
 
 @section Styles {
@@ -141,7 +147,15 @@
         @if (showPhotoMap)
         {
             <div class="mb-5">
-                <h2 class="h5 mb-2">Mapa fotek (@geoPhotos.Count)</h2>
+                <h2 class="h5 mb-2">
+                    Mapa fotek (@geoPhotos.Count)
+                    @if (showRoute)
+                    {
+                        <small class="text-muted" style="font-weight:normal;font-size:.85rem;">
+                            – včetně trasy
+                        </small>
+                    }
+                </h2>
                 <div id="photo-map" style="height:400px;border-radius:8px;"></div>
             </div>
         }
@@ -228,24 +242,39 @@
                         lng = p.Longitude!.Value,
                         thumb = $"/uploads/{Model.Id}/thumbs/{p.FileName}",
                         caption = p.Caption,
-                        id = p.Id
+                        id = p.Id,
+                        hasTime = p.DateTaken.HasValue
                     }),
                     new System.Text.Json.JsonSerializerOptions {
                         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Default
                     }
                 ));
+                const showRoute = @(showRoute ? "true" : "false");
                 const map = L.map('photo-map');
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
                 const bounds = [];
-                photos.forEach(p => {
+                const routePoints = [];
+
+                photos.forEach((p, idx) => {
                     const popup = `<div style="text-align:center;">
                         <img src="${p.thumb}" style="max-width:120px;border-radius:4px;" /><br/>
                         <small>${p.caption || ''}</small></div>`;
                     L.marker([p.lat, p.lng]).addTo(map).bindPopup(popup);
                     bounds.push([p.lat, p.lng]);
+                    if (showRoute && p.hasTime) routePoints.push([p.lat, p.lng]);
                 });
+
+                if (showRoute && routePoints.length >= 2) {
+                    L.polyline(routePoints, {
+                        color: '#dc3545',
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: '6, 8'
+                    }).addTo(map);
+                }
+
                 map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
             })();
         </script>
