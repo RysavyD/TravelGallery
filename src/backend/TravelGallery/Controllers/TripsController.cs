@@ -79,11 +79,11 @@ public class TripsController : Controller
                 ShortDescription = plainText.Length > 300
                     ? plainText[..300] + "…"
                     : plainText,
-                ThumbnailUrls = t.Media
+                Thumbnails = t.Media
                     .OrderBy(m => m.SortOrder)
                     .Where(m => m.MediaType == MediaType.Image)
                     .Take(4)
-                    .Select(m => $"/uploads/{t.Id}/thumbs/{m.FileName}")
+                    .Select(m => new TravelGallery.ViewModels.TripThumbnail(m.Id, $"/uploads/{t.Id}/thumbs/{m.FileName}"))
                     .ToList(),
                 MediaCount = t.Media.Count,
                 Tags = t.Tags.OrderBy(tg => tg.Name)

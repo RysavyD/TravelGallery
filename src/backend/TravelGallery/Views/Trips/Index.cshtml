@@ -173,13 +173,16 @@
                         </div>
                     }
 
-                    @if (trip.ThumbnailUrls.Any())
+                    @if (trip.Thumbnails.Any())
                     {
                         <div class="d-flex gap-1 flex-wrap">
-                            @foreach (var thumb in trip.ThumbnailUrls)
+                            @foreach (var thumb in trip.Thumbnails)
                             {
-                                <img src="@thumb" alt="náhled" class="rounded"
-                                     style="width:50px;height:38px;object-fit:cover;" loading="lazy" />
+                                <a asp-action="Detail" asp-route-id="@trip.Id" asp-route-photo="@thumb.MediaId"
+                                   class="d-inline-block" title="Otevřít galerii">
+                                    <img src="@thumb.Url" alt="náhled" class="rounded"
+                                         style="width:50px;height:38px;object-fit:cover;cursor:pointer;" loading="lazy" />
+                                </a>
                             }
                         </div>
                     }

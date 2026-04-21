@@ -305,5 +305,20 @@
                 }
             });
         });
+
+        // Automaticky otevřít galerii pokud je v URL ?photo={mediaId}
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const photoId = params.get('photo');
+            if (!photoId) return;
+            const target = document.getElementById('media-' + photoId);
+            if (target) {
+                // Počkat, až je DOM zcela připravený, a kliknout
+                setTimeout(() => target.click(), 50);
+                // Po otevření odstranit parametr z URL (historyReplace – nerozbije zpět)
+                const cleanUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState({}, '', cleanUrl);
+            }
+        })();
     </script>
 }
