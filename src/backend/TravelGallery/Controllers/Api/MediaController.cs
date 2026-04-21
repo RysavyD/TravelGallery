@@ -44,8 +44,8 @@ public class MediaController : ControllerBase
     [RequestSizeLimit(50_000_000)]
     public async Task<IActionResult> UploadMedia(int tripId, [FromForm] List<IFormFile> files)
     {
-        var trip = await _db.Trips.AnyAsync(t => t.Id == tripId);
-        if (!trip) return NotFound(new { message = "Výlet nenalezen." });
+        var trip = await _db.Trips.FirstOrDefaultAsync(t => t.Id == tripId);
+        if (trip == null) return NotFound(new { message = "Výlet nenalezen." });
 
         if (files == null || files.Count == 0)
             return BadRequest(new { message = "Žádné soubory." });
@@ -79,6 +79,15 @@ public class MediaController : ControllerBase
             };
 
             _db.Media.Add(media);
+
+            // Doplnit GPS do výletu z první fotky, pokud výlet ještě nemá souřadnice
+            if (!trip.Latitude.HasValue && !trip.Longitude.HasValue
+                && exif?.Latitude.HasValue == true && exif?.Longitude.HasValue == true)
+            {
+                trip.Latitude = exif.Latitude;
+                trip.Longitude = exif.Longitude;
+            }
+
             await _db.SaveChangesAsync();
 
             result.Add(TripsController.ToMediaDto(media, tripId, baseUrl));

@@ -66,6 +66,14 @@ public class MediaController : Controller
                 ExifSummary = exif?.ExifSummary
             });
             savedCount++;
+
+            // Doplnit GPS do výletu z první fotky, která ji má, pokud výlet ještě nemá souřadnice
+            if (!trip.Latitude.HasValue && !trip.Longitude.HasValue
+                && exif?.Latitude.HasValue == true && exif?.Longitude.HasValue == true)
+            {
+                trip.Latitude = exif.Latitude;
+                trip.Longitude = exif.Longitude;
+            }
         }
 
         await _db.SaveChangesAsync();
