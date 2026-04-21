@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Nemáte přístup k tomuto výletu";
+    var tripTitle = ViewBag.TripTitle as string;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 text-center py-5">
+        <div style="font-size:4rem;">🔒</div>
+        <h1 class="h3 mt-3">Nemáte přístup k tomuto výletu</h1>
+        @if (!string.IsNullOrEmpty(tripTitle))
+        {
+            <p class="text-muted">
+                Výlet „<strong>@tripTitle</strong>" je dostupný pouze členům určitých skupin,
+                kterých nejste členem.
+            </p>
+        }
+        else
+        {
+            <p class="text-muted">
+                Tento výlet je dostupný pouze členům určitých skupin.
+            </p>
+        }
+        <p class="text-muted small">
+            Pokud si myslíte, že by vám měl být přístup umožněn, kontaktujte administrátora.
+        </p>
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <a asp-controller="Trips" asp-action="Index" class="btn btn-dark">← Zpět na výlety</a>
+        </div>
+    </div>
+</div>

@@ -109,9 +109,21 @@ public class TripsController : Controller
         var trip = await _db.Trips
             .Include(t => t.Media.OrderBy(m => m.SortOrder))
             .Include(t => t.Tags)
+            .Include(t => t.Groups).ThenInclude(g => g.Members)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (trip == null) return NotFound();
+
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var hasAccess = trip.Groups.Any(g => g.Members.Any(m => m.Id == userId));
+            if (!hasAccess)
+            {
+                ViewBag.TripTitle = trip.Title;
+                return View("NoAccess");
+            }
+        }
 
         // Počítat návštěvy pouze běžných uživatelů (ne admina)
         if (!User.IsInRole("Admin"))
@@ -155,9 +167,21 @@ public class TripsController : Controller
         var trip = await _db.Trips
             .Include(t => t.Media.OrderBy(m => m.SortOrder))
             .Include(t => t.Tags)
+            .Include(t => t.Groups).ThenInclude(g => g.Members)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (trip == null) return NotFound();
+
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var hasAccess = trip.Groups.Any(g => g.Members.Any(m => m.Id == userId));
+            if (!hasAccess)
+            {
+                ViewBag.TripTitle = trip.Title;
+                return View("NoAccess");
+            }
+        }
 
         var description = StripHtml(trip.Description).Trim();
         var images = trip.Media.OrderBy(m => m.SortOrder).ToList();
