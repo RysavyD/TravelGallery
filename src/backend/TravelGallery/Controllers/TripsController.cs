@@ -18,11 +18,13 @@ public class TripsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly bool _groupsEnabled;
 
-    public TripsController(ApplicationDbContext db, IWebHostEnvironment env)
+    public TripsController(ApplicationDbContext db, IWebHostEnvironment env, IConfiguration config)
     {
         _db = db;
         _env = env;
+        _groupsEnabled = config.GetValue<bool>("Features:GroupsEnabled", true);
     }
 
     private const int PageSize = 20;
@@ -35,8 +37,8 @@ public class TripsController : Controller
             .OrderByDescending(t => t.Date)
             .AsQueryable();
 
-        // Non-admin users see only trips from their groups
-        if (!User.IsInRole("Admin"))
+        // Non-admin users see only trips from their groups (pokud jsou skupiny zapnuté)
+        if (_groupsEnabled && !User.IsInRole("Admin"))
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             query = query.Where(t => t.Groups.Any(g => g.Members.Any(m => m.Id == userId)));
@@ -114,7 +116,7 @@ public class TripsController : Controller
 
         if (trip == null) return NotFound();
 
-        if (!User.IsInRole("Admin"))
+        if (_groupsEnabled && !User.IsInRole("Admin"))
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var hasAccess = trip.Groups.Any(g => g.Members.Any(m => m.Id == userId));
@@ -134,7 +136,7 @@ public class TripsController : Controller
 
         // Zjistit sousední výlety (podle data) se stejnými právy jako v Index
         var navQuery = _db.Trips.AsQueryable();
-        if (!User.IsInRole("Admin"))
+        if (_groupsEnabled && !User.IsInRole("Admin"))
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             navQuery = navQuery.Where(t => t.Groups.Any(g => g.Members.Any(m => m.Id == userId)));
@@ -172,7 +174,7 @@ public class TripsController : Controller
 
         if (trip == null) return NotFound();
 
-        if (!User.IsInRole("Admin"))
+        if (_groupsEnabled && !User.IsInRole("Admin"))
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var hasAccess = trip.Groups.Any(g => g.Members.Any(m => m.Id == userId));

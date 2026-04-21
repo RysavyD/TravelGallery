@@ -13,10 +13,22 @@ namespace TravelGallery.Areas.Admin.Controllers;
 public class GroupsController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly bool _groupsEnabled;
 
-    public GroupsController(ApplicationDbContext db)
+    public GroupsController(ApplicationDbContext db, IConfiguration config)
     {
         _db = db;
+        _groupsEnabled = config.GetValue<bool>("Features:GroupsEnabled", true);
+    }
+
+    public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+    {
+        if (!_groupsEnabled)
+        {
+            context.Result = NotFound();
+            return;
+        }
+        base.OnActionExecuting(context);
     }
 
     public async Task<IActionResult> Index()
