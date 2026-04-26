@@ -116,11 +116,11 @@ if (!app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MobileApp");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "areas",
@@ -128,8 +128,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Trips}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Trips}/{action=Index}/{id?}");
 
 app.Run();
 
