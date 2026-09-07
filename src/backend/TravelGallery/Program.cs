@@ -1,5 +1,6 @@
 using System.Text;
 using Ganss.Xss;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
 
 builder.Services.AddScoped<FileStorageService>();
 builder.Services.AddScoped<HtmlSanitizer>();
@@ -96,11 +100,13 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
     await SeedData.InitializeAsync(scope.ServiceProvider, builder.Configuration);
 
     if (args.Contains("--seed-exif-test"))
     {
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
         await TravelGallery.SeedExifTestData.SeedAsync(db, env);
         Console.WriteLine("EXIF test data seeded.");

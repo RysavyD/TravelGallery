@@ -9,6 +9,9 @@
 # Uploaded files (user content)
 **/wwwroot/uploads/
 
+# Data Protection keys (generated per-environment)
+**/App_Data/keys/
+
 # Test/debug scripts
 *.ps1
 cookies.txt
