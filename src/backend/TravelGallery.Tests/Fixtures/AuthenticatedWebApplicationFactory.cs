@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using TravelGallery.Data;
 
@@ -37,6 +38,8 @@ public class AuthenticatedWebApplicationFactory : WebApplicationFactory<Program>
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
             if (descriptor != null) services.Remove(descriptor);
+            // EF Core 9+ drží konfiguraci UseSqlServer i v IDbContextOptionsConfiguration
+            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
 
             var dbName = "AuthTestDb_" + Guid.NewGuid();
 

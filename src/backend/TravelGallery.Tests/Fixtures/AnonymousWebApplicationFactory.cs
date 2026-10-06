@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TravelGallery.Data;
 
 namespace TravelGallery.Tests.Fixtures;
@@ -31,6 +33,8 @@ public class AnonymousWebApplicationFactory : WebApplicationFactory<Program>
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
             if (descriptor != null) services.Remove(descriptor);
+            // EF Core 9+ drží konfiguraci UseSqlServer i v IDbContextOptionsConfiguration
+            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
 
             // Izolovaný EF Core InMemory provider
             var efInMemoryProvider = new ServiceCollection()

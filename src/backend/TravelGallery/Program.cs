@@ -101,7 +101,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
+    if (db.Database.IsRelational())
+        await db.Database.MigrateAsync();
 
     await SeedData.InitializeAsync(scope.ServiceProvider, builder.Configuration);
 
